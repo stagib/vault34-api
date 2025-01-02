@@ -1,13 +1,10 @@
-import jwt
-from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends, Response
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.config import settings
 from app.models import User
 from app.database import get_db
-from app.utils import hash_password, verify_password
+from app.utils import hash_password, verify_password, create_token
 
 
 router = APIRouter(tags=["Auth"])
@@ -27,17 +24,8 @@ def register_user(response: Response, user: UserCreate, db: Session = Depends(ge
     db.commit()
     db.refresh(db_user)
 
-    token = jwt.encode(
-        {
-            "id": db_user.id,
-            "exp": datetime.now(timezone.utc) + timedelta(hours=12),
-        },
-        settings.SECRET_KEY,
-        algorithm=settings.ALGORITHM,
-    )
-
+    token = create_token(db_user.id)
     response.set_cookie(key="auth_token", value=token)
-
     return {"token": f"{token}"}
 
 
@@ -49,15 +37,7 @@ def login(response: Response, user: UserCreate, db: Session = Depends(get_db)):
         return {"error": "user not found"}
 
     if verify_password(db_user.password, user.password):
-        token = jwt.encode(
-            {
-                "id": db_user.id,
-                "exp": datetime.now(timezone.utc) + timedelta(hours=12),
-            },
-            settings.SECRET_KEY,
-            algorithm=settings.ALGORITHM,
-        )
-
+        token = create_token(db_user.id)
         response.set_cookie(key="auth_token", value=token)
 
     return {"sdfsfsn": "sdfdsf"}
