@@ -104,6 +104,14 @@ def delete_post(
     return {"detail": "alskdmfmksf"}
 
 
+@router.get("/posts/{post_id}/files", response_model=list[FileBase])
+def get_post_files(post_id: int, db: Session = Depends(get_db)):
+    db_post = db.query(Post).filter(Post.id == post_id).first()
+    if not db_post:
+        raise HTTPException(status_code=404, detail="post not found")
+    return db_post.files
+
+
 @router.post("/posts/{post_id}/files")
 async def upload_files(
     post_id: int,
@@ -118,7 +126,7 @@ async def upload_files(
     for file in files:
         if (
             file.content_type
-            not in settings.ALLOWED_IMAGE_TYPES | settings.ALLOWED_VIDEO_TYPES
+            not in settings.ALLOWED_IMAGE_TYPES + settings.ALLOWED_VIDEO_TYPES
         ):
             raise HTTPException(status_code=400, detail="unsupported file type")
 
@@ -154,14 +162,6 @@ async def upload_files(
     return {"detail": "hello"}
 
 
-@router.get("/posts/{post_id}/files", response_model=list[FileBase])
-def get_post_files(post_id: int, db: Session = Depends(get_db)):
-    db_post = db.query(Post).filter(Post.id == post_id).first()
-    if not db_post:
-        raise HTTPException(status_code=404, detail="post not found")
-    return db_post.files
-
-
 @router.get("/posts/{post_id}/files/{file_id}")
 def get_file(post_id: int, file_id: int, db: Session = Depends(get_db)):
     file = db.query(PostFile).filter(Post.id == post_id, PostFile.id == file_id).first()
@@ -173,3 +173,19 @@ def get_file(post_id: int, file_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="file not found")
 
     return FileResponse(file_path, media_type=file.content_type)
+
+
+@router.delete("/posts/{post_id}/files/{file_id}")
+def delete_file(
+    post_id: int,
+    file_id: int,
+    user: Optional[dict] = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    file = db.query(PostFile).filter(Post.id == post_id, PostFile.id == file_id).first()
+    if not file:
+        raise HTTPException(status_code=404, detail="file not found")
+
+    db.delete(file)
+    db.commit()
+    return {"salkdfkma": "sdlkmffskml"}
