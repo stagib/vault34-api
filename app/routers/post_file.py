@@ -35,7 +35,7 @@ def get_post_files(post_id: int, db: Session = Depends(get_db)):
 @router.post("/posts/{post_id}/files")
 async def upload_files(
     post_id: int,
-    user: Optional[dict] = Depends(get_current_user),
+    user: dict = Depends(get_current_user),
     files: list[UploadFile] = File(...),
     db: Session = Depends(get_db),
 ):
@@ -99,7 +99,7 @@ def get_file(post_id: int, file_id: int, db: Session = Depends(get_db)):
 def delete_file(
     post_id: int,
     file_id: int,
-    user: Optional[dict] = Depends(get_current_user),
+    user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     file = db.query(PostFile).filter(Post.id == post_id, PostFile.id == file_id).first()

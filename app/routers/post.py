@@ -40,7 +40,7 @@ def get_posts(db: Session = Depends(get_db)):
 @router.post("/posts")
 def create_post(
     post: PostBase,
-    user: Optional[dict] = Depends(get_current_user),
+    user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     db_post = Post(title=post.title, user_id=user.id)
@@ -63,7 +63,7 @@ def update_post(
     post_id: int,
     post: PostUpdate,
     db: Session = Depends(get_db),
-    user: Optional[dict] = Depends(get_current_user),
+    user: dict = Depends(get_current_user),
 ):
     db_post = db.query(Post).filter(Post.id == post_id).first()
     if not db_post:
@@ -81,7 +81,7 @@ def update_post(
 def delete_post(
     post_id: int,
     db: Session = Depends(get_db),
-    user: Optional[dict] = Depends(get_current_user),
+    user: dict = Depends(get_current_user),
 ):
     db_post = db.query(Post).filter(Post.id == post_id, Post.user_id == user.id).first()
     if not db_post:
