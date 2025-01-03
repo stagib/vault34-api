@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Literal
 from sqlalchemy.orm import Session
 
-from app.models import Post
+from app.models import Post, Tag
 from app.database import get_db
 from app.dependencies import get_current_user
 
@@ -16,8 +17,14 @@ class UserBase(BaseModel):
     username: str
 
 
+class TagBase(BaseModel):
+    name: str
+    type: Literal["Artist", "General", "Character", "Series"]
+
+
 class PostBase(BaseModel):
     title: str
+    tags: list[TagBase]
 
 
 class PostResponse(BaseModel):
@@ -25,10 +32,19 @@ class PostResponse(BaseModel):
     title: str
     date_created: datetime
     user: UserBase
+    tags: list[TagBase]
 
 
-class PostUpdate(BaseModel):
-    title: str
+def add_tag(db: Session, tags: list, db_post: Post):
+    db_post.tags = []
+    for tag in tags:
+        db_tag = (
+            db.query(Tag).filter(Tag.name == tag.name, Tag.type == tag.type).first()
+        )
+        if not db_tag:
+            db_tag = Tag(name=tag.name, type=tag.type)
+        db_post.tags.append(db_tag)
+    db.commit()
 
 
 @router.get("/posts", response_model=list[PostResponse])
@@ -46,6 +62,8 @@ def create_post(
     db.add(db_post)
     db.commit()
     db.refresh(db_post)
+
+    add_tag(db, post.tags, db_post)
     return {"detail": "hello"}
 
 
@@ -60,7 +78,7 @@ def get_post(post_id: int, db: Session = Depends(get_db)):
 @router.put("/posts/{post_id}", response_model=PostResponse)
 def update_post(
     post_id: int,
-    post: PostUpdate,
+    post: PostBase,
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user),
 ):
@@ -69,10 +87,13 @@ def update_post(
         raise HTTPException(status_code=404, detail="post not found")
 
     for k, v in post.model_dump(exclude_unset=True).items():
+        if k == "tags":
+            continue
         setattr(db_post, k, v)
 
     db.commit()
     db.refresh(db_post)
+    add_tag(db, post.tags, db_post)
     return db_post
 
 

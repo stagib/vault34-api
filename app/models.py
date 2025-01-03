@@ -1,6 +1,13 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, func
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Table, func
 from sqlalchemy.orm import relationship
 from app.database import Base
+
+post_tag = Table(
+    "post_tag",
+    Base.metadata,
+    Column("post_id", Integer, ForeignKey("posts.id"), primary_key=True),
+    Column("tag_id", Integer, ForeignKey("tags.id"), primary_key=True),
+)
 
 
 class Post(Base):
@@ -10,6 +17,7 @@ class Post(Base):
     date_created = Column(DateTime, default=func.now())
     title = Column(String)
     user = relationship("User", back_populates="posts")
+    tags = relationship("Tag", secondary=post_tag, back_populates="posts")
     files = relationship("PostFile", back_populates="post")
 
 
@@ -34,3 +42,12 @@ class PostFile(Base):
     width = Column(Integer)
     height = Column(Integer)
     post = relationship("Post", back_populates="files")
+
+
+class Tag(Base):
+    __tablename__ = "tags"
+    id = Column(Integer, primary_key=True, index=True)
+    date_created = Column(DateTime, default=func.now())
+    name = Column(String, nullable=False)
+    type = Column(String, nullable=False)
+    posts = relationship("Post", secondary=post_tag, back_populates="tags")
