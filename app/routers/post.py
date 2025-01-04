@@ -1,38 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
-from datetime import datetime
-from typing import Literal
 from sqlalchemy.orm import Session
 
 from app.models import Post, Tag
 from app.database import get_db
 from app.dependencies import get_current_user
+from app.schemas import PostBase, PostResponse
 
 
 router = APIRouter(tags=["Post"])
-
-
-class UserBase(BaseModel):
-    id: int
-    username: str
-
-
-class TagBase(BaseModel):
-    name: str
-    type: Literal["Artist", "General", "Character", "Series"]
-
-
-class PostBase(BaseModel):
-    title: str
-    tags: list[TagBase]
-
-
-class PostResponse(BaseModel):
-    id: int
-    title: str
-    date_created: datetime
-    user: UserBase
-    tags: list[TagBase]
 
 
 def add_tag(db: Session, tags: list, db_post: Post):
