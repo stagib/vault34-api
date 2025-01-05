@@ -14,6 +14,10 @@ class TagBase(BaseModel):
 
 
 class PostBase(BaseModel):
+    id: int
+
+
+class PostCreate(BaseModel):
     title: str
     tags: list[TagBase]
 
@@ -28,3 +32,10 @@ class PostResponse(BaseModel):
 
 class VaultBase(BaseModel):
     title: str
+
+
+class VaultResponse(BaseModel):
+    id: int
+    title: str
+    date_created: datetime
+    posts: list[PostBase]

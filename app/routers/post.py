@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from app.models import Post, Tag
 from app.database import get_db
 from app.dependencies import get_current_user
-from app.schemas import PostBase, PostResponse
+from app.schemas import PostCreate, PostResponse
 
 
 router = APIRouter(tags=["Post"])
@@ -29,7 +29,7 @@ def get_posts(db: Session = Depends(get_db)):
 
 @router.post("/posts")
 def create_post(
-    post: PostBase,
+    post: PostCreate,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -53,11 +53,11 @@ def get_post(post_id: int, db: Session = Depends(get_db)):
 @router.put("/posts/{post_id}", response_model=PostResponse)
 def update_post(
     post_id: int,
-    post: PostBase,
+    post: PostCreate,
     db: Session = Depends(get_db),
     user: dict = Depends(get_current_user),
 ):
-    db_post = db.query(Post).filter(Post.id == post_id).first()
+    db_post = db.query(Post).filter(Post.id == post_id, Post.user_id == user.id).first()
     if not db_post:
         raise HTTPException(status_code=404, detail="post not found")
 
