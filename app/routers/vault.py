@@ -29,8 +29,46 @@ def create_vault(
     return {"detail": "Vault created successfully"}
 
 
+@router.put("/vaults/{vault_id}", response_model=VaultResponse)
+def update_vault(
+    vault: VaultBase,
+    vault_id: int,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    db_vault = (
+        db.query(Vault).filter(Vault.id == vault_id, Vault.user_id == user.id).first()
+    )
+    if not db_vault:
+        raise HTTPException(status_code=404, detail="Vault not found")
+
+    for key, value in vault.model_dump(exclude_unset=True).items():
+        setattr(db_vault, key, value)
+
+    db.commit()
+    db.refresh(db_vault)
+    return db_vault
+
+
+@router.delete("/vaults/{vault_id}")
+def delete_vault(
+    vault_id: int,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    db_vault = (
+        db.query(Vault).filter(Vault.id == vault_id, Vault.user_id == user.id).first()
+    )
+    if not db_vault:
+        raise HTTPException(status_code=404, detail="Vault not found")
+
+    db.delete(db_vault)
+    db.commit()
+    return {"detail": "Successfully deleted vault"}
+
+
 @router.get("/vaults/{vault_id}/posts", response_model=VaultResponse)
-def get_vault(vault_id: int, db: Session = Depends(get_db)):
+def get_vault_posts(vault_id: int, db: Session = Depends(get_db)):
     db_vault = db.query(Vault).filter(Vault.id == vault_id).first()
     if not db_vault:
         raise HTTPException(status_code=404, detail="Vault not found")
@@ -38,7 +76,7 @@ def get_vault(vault_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/vaults/{vault_id}/posts")
-def add_post(
+def add_post_to_vault(
     post: PostBase,
     vault_id: int,
     user: dict = Depends(get_current_user),
@@ -61,7 +99,7 @@ def add_post(
 
 
 @router.delete("/vaults/{vault_id}/posts")
-def delete_post(
+def delete_post_from_vault(
     post: PostBase,
     vault_id: int,
     user: dict = Depends(get_current_user),

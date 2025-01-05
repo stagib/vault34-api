@@ -61,10 +61,10 @@ def update_post(
     if not db_post:
         raise HTTPException(status_code=404, detail="post not found")
 
-    for k, v in post.model_dump(exclude_unset=True).items():
-        if k == "tags":
+    for key, value in post.model_dump(exclude_unset=True).items():
+        if key == "tags":
             continue
-        setattr(db_post, k, v)
+        setattr(db_post, key, value)
 
     db.commit()
     db.refresh(db_post)
