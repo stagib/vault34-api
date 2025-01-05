@@ -1,6 +1,8 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Table, func
 from sqlalchemy.orm import relationship
+
 from app.database import Base
+
 
 post_tag = Table(
     "post_tag",
@@ -8,6 +10,24 @@ post_tag = Table(
     Column("post_id", Integer, ForeignKey("posts.id"), primary_key=True),
     Column("tag_id", Integer, ForeignKey("tags.id"), primary_key=True),
 )
+
+
+post_vault = Table(
+    "post_vault",
+    Base.metadata,
+    Column("post_id", Integer, ForeignKey("posts.id"), primary_key=True),
+    Column("vault_id", Integer, ForeignKey("vaults.id"), primary_key=True),
+)
+
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True, index=True)
+    date_created = Column(DateTime, default=func.now(), nullable=True)
+    username = Column(String, nullable=False)
+    password = Column(String, nullable=False)
+    posts = relationship("Post", back_populates="user")
+    vaults = relationship("Vault", back_populates="user")
 
 
 class Post(Base):
@@ -18,16 +38,8 @@ class Post(Base):
     title = Column(String)
     user = relationship("User", back_populates="posts")
     tags = relationship("Tag", secondary=post_tag, back_populates="posts")
+    vaults = relationship("Vault", secondary=post_vault, back_populates="posts")
     files = relationship("PostFile", back_populates="post")
-
-
-class User(Base):
-    __tablename__ = "users"
-    id = Column(Integer, primary_key=True, index=True)
-    date_created = Column(DateTime, default=func.now(), nullable=True)
-    username = Column(String, nullable=False)
-    password = Column(String, nullable=False)
-    posts = relationship("Post", back_populates="user")
 
 
 class PostFile(Base):
@@ -42,6 +54,16 @@ class PostFile(Base):
     width = Column(Integer)
     height = Column(Integer)
     post = relationship("Post", back_populates="files")
+
+
+class Vault(Base):
+    __tablename__ = "vaults"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    date_created = Column(DateTime, default=func.now())
+    title = Column(String, nullable=False)
+    user = relationship("User", back_populates="vaults")
+    posts = relationship("Post", secondary=post_vault, back_populates="vaults")
 
 
 class Tag(Base):

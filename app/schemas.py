@@ -24,3 +24,7 @@ class PostResponse(BaseModel):
     date_created: datetime
     user: UserBase
     tags: list[TagBase]
+
+
+class VaultBase(BaseModel):
+    title: str
