@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Table, func
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 
 from app.database import Base
 
@@ -29,6 +29,8 @@ class User(Base):
     posts = relationship("Post", back_populates="user")
     vaults = relationship("Vault", back_populates="user")
     comments = relationship("Comment", back_populates="user")
+    post_reactions = relationship("PostReaction", back_populates="user")
+    comment_reactions = relationship("CommentReaction", back_populates="user")
 
 
 class Post(Base):
@@ -42,6 +44,7 @@ class Post(Base):
     vaults = relationship("Vault", secondary=post_vault, back_populates="posts")
     files = relationship("PostFile", back_populates="post")
     comments = relationship("Comment", back_populates="post")
+    reactions = relationship("PostReactions", back_populates="post")
 
 
 class PostFile(Base):
@@ -56,6 +59,15 @@ class PostFile(Base):
     width = Column(Integer)
     height = Column(Integer)
     post = relationship("Post", back_populates="files")
+
+
+class PostReaction(Base):
+    __tablename__ = "post_reactions"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    post_id = Column(Integer, ForeignKey("posts.id"), nullable=False)
+    date_created = Column(DateTime, default=func.now())
+    type = Column(String, nullable=False)
 
 
 class Vault(Base):
@@ -86,3 +98,13 @@ class Comment(Base):
     content = Column(String, nullable=False)
     user = relationship("User", back_populates="comments")
     post = relationship("Post", back_populates="comments")
+    reactions = relationship("CommentReaction", back_populates="Comment")
+
+
+class CommentReaction(Base):
+    __tablename__ = "comment_reactions"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    comment_id = Column(Integer, ForeignKey("comments.id"), nullable=False)
+    date_created = Column(DateTime, default=func.now())
+    type = Column(String, nullable=False)
