@@ -28,6 +28,7 @@ class User(Base):
     password = Column(String, nullable=False)
     posts = relationship("Post", back_populates="user")
     vaults = relationship("Vault", back_populates="user")
+    comments = relationship("Comment", back_populates="user")
 
 
 class Post(Base):
@@ -73,3 +74,13 @@ class Tag(Base):
     name = Column(String, nullable=False)
     type = Column(String, nullable=False)
     posts = relationship("Post", secondary=post_tag, back_populates="tags")
+
+
+class Comment(Base):
+    __tablename__ = "comments"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    post_id = Column(Integer, ForeignKey("posts.id"), nullable=False)
+    date_created = Column(DateTime, default=func.now())
+    content = Column(String, nullable=False)
+    user = relationship("User", back_populates="comments")
