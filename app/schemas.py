@@ -39,3 +39,14 @@ class VaultResponse(BaseModel):
     title: str
     date_created: datetime
     posts: list[PostBase]
+
+
+class CommentBase(BaseModel):
+    content: str
+
+
+class CommentResponse(BaseModel):
+    id: int
+    user: UserBase
+    date_created: datetime
+    content: str
