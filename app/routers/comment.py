@@ -4,9 +4,20 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Comment, Post
 from app.dependencies import get_current_user
-from app.schemas import CommentBase
+from app.schemas import CommentBase, CommentResponse
 
 router = APIRouter(tags=["Post Comment"])
+
+
+@router.get("/posts/{post_id}/comments", response_model=list[CommentResponse])
+def get_comments(
+    post_id: int,
+    db: Session = Depends(get_db),
+):
+    db_post = db.query(Post).filter(Post.id == post_id).first()
+    if not db_post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    return db_post.comments
 
 
 @router.post("/posts/{post_id}/comments")
@@ -16,7 +27,7 @@ def create_comment(
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    db_post = db.query(Post).filter(Post.id == post_id, Post.user_id == user.id).first()
+    db_post = db.query(Post).filter(Post.id == post_id).first()
     if not db_post:
         raise HTTPException(status_code=404, detail="Post not found")
 
@@ -25,3 +36,26 @@ def create_comment(
     db.commit()
     db.refresh(db_comment)
     return {"detail": "Comment created"}
+
+
+@router.delete("/posts/{post_id}/comments/{comment_id}")
+def delete_comment(
+    post_id: int,
+    comment_id: int,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    db_comment = (
+        db.query(Comment)
+        .filter(
+            Comment.id == comment_id,
+            Comment.post_id == post_id,
+            Comment.user_id == user.id,
+        )
+        .first()
+    )
+    if not db_comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    db.delete(db_comment)
+    db.commit()
+    return {"detail": "Removed comment"}

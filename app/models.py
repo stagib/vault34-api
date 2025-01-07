@@ -41,6 +41,7 @@ class Post(Base):
     tags = relationship("Tag", secondary=post_tag, back_populates="posts")
     vaults = relationship("Vault", secondary=post_vault, back_populates="posts")
     files = relationship("PostFile", back_populates="post")
+    comments = relationship("Comment", back_populates="post")
 
 
 class PostFile(Base):
@@ -84,3 +85,4 @@ class Comment(Base):
     date_created = Column(DateTime, default=func.now())
     content = Column(String, nullable=False)
     user = relationship("User", back_populates="comments")
+    post = relationship("Post", back_populates="comments")
