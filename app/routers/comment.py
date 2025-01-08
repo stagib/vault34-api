@@ -61,13 +61,18 @@ def delete_comment(
     return {"detail": "Removed comment"}
 
 
-@router.post("/comments/{comment_id}")
+@router.post("/posts/{post_id}/comments/{comment_id}/reactions")
 def react_to_comment(
+    post_id: int,
     comment_id: int,
     reaction: ReactionBase,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    db_post = db.query(Post).filter(Post.id == post_id).first()
+    if not db_post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
     db_reaction = (
         db.query(CommentReaction)
         .filter(
