@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.models import Post, Tag
+from app.models import Post, Tag, PostReaction
 from app.database import get_db
 from app.dependencies import get_current_user
-from app.schemas import PostCreate, PostResponse
+from app.schemas import PostCreate, PostResponse, ReactionBase
 
 
 router = APIRouter(tags=["Post"])
@@ -85,3 +85,29 @@ def delete_post(
     db.delete(db_post)
     db.commit()
     return {"detail": "alskdmfmksf"}
+
+
+@router.post("/posts/{post_id}/reactions")
+def react_to_post(
+    reaction: ReactionBase,
+    post_id: int,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    db_reaction = (
+        db.query(PostReaction)
+        .filter(
+            PostReaction.post_id == post_id,
+            PostReaction.user_id == user.id,
+        )
+        .first()
+    )
+    if db_reaction:
+        db_reaction.type = reaction.type
+        db.commit()
+        return {"detail": "Reaction updated"}
+
+    post_reaction = PostReaction(user_id=user.id, post_id=post_id, type=reaction.type)
+    db.add(post_reaction)
+    db.commit()
+    return {"detail": "Reaction added"}

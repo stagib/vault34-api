@@ -44,7 +44,15 @@ class Post(Base):
     vaults = relationship("Vault", secondary=post_vault, back_populates="posts")
     files = relationship("PostFile", back_populates="post")
     comments = relationship("Comment", back_populates="post")
-    reactions = relationship("PostReactions", back_populates="post")
+    reactions = relationship("PostReaction", back_populates="post", lazy="dynamic")
+
+    @property
+    def likes(self):
+        return self.reactions.filter(PostReaction.type == "like").count()
+
+    @property
+    def dislikes(self):
+        return self.reactions.filter(PostReaction.type == "dislike").count()
 
 
 class PostFile(Base):
@@ -68,6 +76,8 @@ class PostReaction(Base):
     post_id = Column(Integer, ForeignKey("posts.id"), nullable=False)
     date_created = Column(DateTime, default=func.now())
     type = Column(String, nullable=False)
+    user = relationship("User", back_populates="post_reactions")
+    post = relationship("Post", back_populates="reactions")
 
 
 class Vault(Base):
@@ -98,7 +108,17 @@ class Comment(Base):
     content = Column(String, nullable=False)
     user = relationship("User", back_populates="comments")
     post = relationship("Post", back_populates="comments")
-    reactions = relationship("CommentReaction", back_populates="Comment")
+    reactions = relationship(
+        "CommentReaction", back_populates="Comment", lazy="dynamic"
+    )
+
+    @property
+    def likes(self):
+        return self.reactions.filter(CommentReaction.type == "like").count()
+
+    @property
+    def dislikes(self):
+        return self.reactions.filter(CommentReaction.type == "dislike").count()
 
 
 class CommentReaction(Base):
@@ -108,3 +128,5 @@ class CommentReaction(Base):
     comment_id = Column(Integer, ForeignKey("comments.id"), nullable=False)
     date_created = Column(DateTime, default=func.now())
     type = Column(String, nullable=False)
+    user = relationship("User", back_populates="comment_reactions")
+    Comment = relationship("Comment", back_populates="reactions")

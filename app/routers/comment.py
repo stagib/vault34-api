@@ -2,9 +2,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import Comment, Post
+from app.models import Comment, Post, CommentReaction
 from app.dependencies import get_current_user
-from app.schemas import CommentBase, CommentResponse
+from app.schemas import CommentBase, CommentResponse, ReactionBase
 
 router = APIRouter(tags=["Post Comment"])
 
@@ -59,3 +59,32 @@ def delete_comment(
     db.delete(db_comment)
     db.commit()
     return {"detail": "Removed comment"}
+
+
+@router.post("/comments/{comment_id}")
+def react_to_comment(
+    comment_id: int,
+    reaction: ReactionBase,
+    user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    db_reaction = (
+        db.query(CommentReaction)
+        .filter(
+            CommentReaction.comment_id == comment_id,
+            CommentReaction.user_id == user.id,
+        )
+        .first()
+    )
+
+    if db_reaction:
+        db_reaction.type = reaction.type
+        db.commit()
+        return {"detail": "Reaction updated"}
+
+    comment_reaction = CommentReaction(
+        user_id=user.id, comment_id=comment_id, type=reaction.type
+    )
+    db.add(comment_reaction)
+    db.commit()
+    return {"detail": "Reaction added"}

@@ -26,6 +26,8 @@ class PostResponse(BaseModel):
     id: int
     title: str
     date_created: datetime
+    likes: int
+    dislikes: int
     user: UserBase
     tags: list[TagBase]
 
@@ -49,4 +51,10 @@ class CommentResponse(BaseModel):
     id: int
     user: UserBase
     date_created: datetime
+    likes: int
+    dislikes: int
     content: str
+
+
+class ReactionBase(BaseModel):
+    type: str
