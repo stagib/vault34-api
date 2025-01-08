@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
+from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.models import Post, Tag, PostReaction
 from app.database import get_db
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, get_optional_user
 from app.schemas import PostCreate, PostResponse, ReactionBase
 
 
@@ -43,11 +44,31 @@ def create_post(
 
 
 @router.get("/posts/{post_id}", response_model=PostResponse)
-def get_post(post_id: int, db: Session = Depends(get_db)):
+def get_post(
+    post_id: int,
+    user: Optional[dict] = Depends(get_optional_user),
+    db: Session = Depends(get_db),
+):
     db_post = db.query(Post).filter(Post.id == post_id).first()
     if not db_post:
         raise HTTPException(status_code=404, detail="post not found")
-    return db_post
+
+    user_reaction = None
+    if user:
+        reaction = db_post.reactions.filter(PostReaction.user_id == user.id).first()
+        if reaction:
+            user_reaction = reaction.type
+
+    return {
+        "id": db_post.id,
+        "title": db_post.title,
+        "date_created": db_post.date_created,
+        "likes": db_post.likes,
+        "dislikes": db_post.dislikes,
+        "user_reaction": user_reaction,
+        "user": db_post.user,
+        "tags": db_post.tags,
+    }
 
 
 @router.put("/posts/{post_id}", response_model=PostResponse)

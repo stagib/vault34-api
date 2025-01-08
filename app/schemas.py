@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Optional
 
 
 class UserBase(BaseModel):
@@ -28,6 +28,7 @@ class PostResponse(BaseModel):
     date_created: datetime
     likes: int
     dislikes: int
+    user_reaction: Optional[str]
     user: UserBase
     tags: list[TagBase]
 

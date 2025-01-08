@@ -1,6 +1,6 @@
 import jwt
-from fastapi import Request, HTTPException, Cookie, Depends
-from typing import Optional, Annotated
+from fastapi import HTTPException, Cookie, Depends
+from typing import Annotated
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -34,19 +34,27 @@ def get_current_user(
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
 
-def get_optional_user(request: Request) -> Optional[dict]:
-    token = request.cookies.get("authToken")
-
-    if not token:
+def get_optional_user(
+    auth_token: Annotated[str | None, Cookie()] = None,
+    db: Session = Depends(get_db),
+):
+    if not auth_token:
         return None
 
     try:
         payload = jwt.decode(
-            token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+            auth_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
         )
-        id = payload.get("id")
-        if not id:
-            return None
-        return {"username": id}
+        user_id = payload.get("id")
+
+        if not user_id or user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+
+        user = db.query(User).filter(user_id == user_id).first()
+
+        if not user or user is None:
+            raise HTTPException(status_code=401, detail="user not found")
+        return user
+
     except jwt.InvalidTokenError:
         return None
