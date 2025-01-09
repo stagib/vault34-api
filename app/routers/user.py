@@ -24,6 +24,14 @@ def get_user_posts(username: str, db: Session = Depends(get_db)):
     return user.posts
 
 
+@router.get("/users/{username}/posts/reactions")
+def get_user_post_reactions(username: str, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == username).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user.post_reactions
+
+
 @router.get("/users/{username}/comments", response_model=list[CommentResponse])
 def get_user_comments(username: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
