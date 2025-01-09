@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
+from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Comment, Post, CommentReaction
-from app.dependencies import get_current_user
+from app.dependencies import get_current_user, get_optional_user
 from app.schemas import CommentBase, CommentResponse, ReactionBase
 
 router = APIRouter(tags=["Post Comment"])
@@ -12,12 +13,38 @@ router = APIRouter(tags=["Post Comment"])
 @router.get("/posts/{post_id}/comments", response_model=list[CommentResponse])
 def get_comments(
     post_id: int,
+    user: Optional[dict] = Depends(get_optional_user),
     db: Session = Depends(get_db),
 ):
     db_post = db.query(Post).filter(Post.id == post_id).first()
     if not db_post:
         raise HTTPException(status_code=404, detail="Post not found")
-    return db_post.comments
+
+    comment_ids = [comment.id for comment in db_post.comments]
+    reactions = (
+        db.query(CommentReaction)
+        .filter(
+            CommentReaction.comment_id.in_(comment_ids),
+            CommentReaction.user_id == user.id,
+        )
+        .all()
+    )
+
+    reaction_map = {reaction.comment_id: reaction.type for reaction in reactions}
+    response = []
+    for comment in db_post.comments:
+        response.append(
+            {
+                "id": comment.id,
+                "date_created": comment.date_created,
+                "likes": comment.likes,
+                "dislikes": comment.dislikes,
+                "user_reaction": reaction_map.get(comment.id),
+                "content": comment.content,
+                "user": comment.user,
+            }
+        )
+    return response
 
 
 @router.post("/posts/{post_id}/comments")

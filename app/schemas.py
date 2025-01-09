@@ -50,11 +50,12 @@ class CommentBase(BaseModel):
 
 class CommentResponse(BaseModel):
     id: int
-    user: UserBase
     date_created: datetime
     likes: int
     dislikes: int
+    user_reaction: Optional[str]
     content: str
+    user: UserBase
 
 
 class ReactionBase(BaseModel):
