@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import User
-from app.schemas import UserBase, VaultResponse, PostBase
+from app.schemas import UserBase, VaultResponse, PostBase, CommentResponse
 
 router = APIRouter(tags=["User"])
 
@@ -22,6 +22,14 @@ def get_user_posts(username: str, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user.posts
+
+
+@router.get("/users/{username}/comments", response_model=list[CommentResponse])
+def get_user_comments(username: str, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.username == username).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user.comments
 
 
 @router.get("/users/{username}/vaults", response_model=list[VaultResponse])

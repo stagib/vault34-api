@@ -53,7 +53,7 @@ class CommentResponse(BaseModel):
     date_created: datetime
     likes: int
     dislikes: int
-    user_reaction: Optional[str]
+    user_reaction: Optional[str] = None
     content: str
     user: UserBase
 

@@ -20,31 +20,33 @@ def get_comments(
     if not db_post:
         raise HTTPException(status_code=404, detail="Post not found")
 
-    comment_ids = [comment.id for comment in db_post.comments]
-    reactions = (
-        db.query(CommentReaction)
-        .filter(
-            CommentReaction.comment_id.in_(comment_ids),
-            CommentReaction.user_id == user.id,
+    if user:
+        comment_ids = [comment.id for comment in db_post.comments]
+        reactions = (
+            db.query(CommentReaction)
+            .filter(
+                CommentReaction.comment_id.in_(comment_ids),
+                CommentReaction.user_id == user.id,
+            )
+            .all()
         )
-        .all()
-    )
 
-    reaction_map = {reaction.comment_id: reaction.type for reaction in reactions}
-    response = []
-    for comment in db_post.comments:
-        response.append(
-            {
-                "id": comment.id,
-                "date_created": comment.date_created,
-                "likes": comment.likes,
-                "dislikes": comment.dislikes,
-                "user_reaction": reaction_map.get(comment.id),
-                "content": comment.content,
-                "user": comment.user,
-            }
-        )
-    return response
+        reaction_map = {reaction.comment_id: reaction.type for reaction in reactions}
+        response = []
+        for comment in db_post.comments:
+            response.append(
+                {
+                    "id": comment.id,
+                    "date_created": comment.date_created,
+                    "likes": comment.likes,
+                    "dislikes": comment.dislikes,
+                    "user_reaction": reaction_map.get(comment.id),
+                    "content": comment.content,
+                    "user": comment.user,
+                }
+            )
+        return response
+    return db_post.comments
 
 
 @router.post("/posts/{post_id}/comments")
