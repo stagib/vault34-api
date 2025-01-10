@@ -2,25 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from typing import Optional
 from sqlalchemy.orm import Session
 
-from app.models import Post, Tag, PostReaction
+from app.models import Post, PostReaction
 from app.database import get_db
 from app.dependencies import get_current_user, get_optional_user
 from app.schemas import PostCreate, PostResponse, ReactionBase
+from app.utils import add_tag
 
 
 router = APIRouter(tags=["Post"])
-
-
-def add_tag(db: Session, tags: list, db_post: Post):
-    db_post.tags = []
-    for tag in tags:
-        db_tag = (
-            db.query(Tag).filter(Tag.name == tag.name, Tag.type == tag.type).first()
-        )
-        if not db_tag:
-            db_tag = Tag(name=tag.name, type=tag.type)
-        db_post.tags.append(db_tag)
-    db.commit()
 
 
 @router.get("/posts", response_model=list[PostResponse])
