@@ -50,7 +50,9 @@ async def upload_files(
 
         _, ext = os.path.splitext(file.filename)
         unique_filename = f"{uuid4().hex}{ext}"
-        upload_path = os.path.join(settings.UPLOAD_FOLDER, user.username, str(post_id))
+        upload_path = os.path.join(
+            settings.UPLOAD_FOLDER, user.username, "posts", str(post_id)
+        )
         file_path = os.path.join(upload_path, unique_filename)
 
         os.makedirs(upload_path, exist_ok=True)
