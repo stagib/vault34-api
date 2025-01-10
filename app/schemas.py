@@ -28,7 +28,7 @@ class PostResponse(BaseModel):
     date_created: datetime
     likes: int
     dislikes: int
-    user_reaction: Optional[str]
+    user_reaction: Optional[str] = None
     user: UserBase
     tags: list[TagBase]
 
