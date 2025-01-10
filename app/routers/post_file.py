@@ -1,12 +1,10 @@
 import os
-import uuid
 from PIL import Image
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from datetime import datetime
-from typing import Optional
 from sqlalchemy.orm import Session
+from uuid import uuid4
 
 from app.models import Post, PostFile
 from app.database import get_db
@@ -51,7 +49,7 @@ async def upload_files(
             raise HTTPException(status_code=400, detail="unsupported file type")
 
         _, ext = os.path.splitext(file.filename)
-        unique_filename = f"{uuid.uuid4().hex}{ext}"
+        unique_filename = f"{uuid4().hex}{ext}"
         upload_path = os.path.join(settings.UPLOAD_FOLDER, user.username, str(post_id))
         file_path = os.path.join(upload_path, unique_filename)
 

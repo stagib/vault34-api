@@ -18,7 +18,7 @@ class UserCreate(BaseModel):
 @router.post("/register")
 def register_user(response: Response, user: UserCreate, db: Session = Depends(get_db)):
     hashed_password = hash_password(user.password)
-    db_user = User(username=user.username, password=hashed_password)
+    db_user = User(username=user.username, password=hashed_password, profile_picture="")
 
     db.add(db_user)
     db.commit()

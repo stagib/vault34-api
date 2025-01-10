@@ -26,6 +26,7 @@ class User(Base):
     date_created = Column(DateTime, default=func.now(), nullable=True)
     username = Column(String, nullable=False)
     password = Column(String, nullable=False)
+    profile_picture = Column(String, nullable=False)
     posts = relationship("Post", back_populates="user")
     vaults = relationship("Vault", back_populates="user")
     comments = relationship("Comment", back_populates="user")
