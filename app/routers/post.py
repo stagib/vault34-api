@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
-from typing import Optional
 from sqlalchemy.orm import Session
+from typing import Optional
 
-from app.models import Post, PostReaction
 from app.database import get_db
 from app.dependencies import get_current_user, get_optional_user
+from app.models import Post, PostReaction
 from app.schemas import PostCreate, PostResponse, ReactionBase
 from app.utils import add_tag
 
@@ -17,7 +17,7 @@ def get_posts(db: Session = Depends(get_db)):
     return db.query(Post).all()
 
 
-@router.post("/posts")
+@router.post("/posts", response_model=PostResponse)
 def create_post(
     post: PostCreate,
     user: dict = Depends(get_current_user),
@@ -29,7 +29,7 @@ def create_post(
     db.refresh(db_post)
 
     add_tag(db, post.tags, db_post)
-    return {"detail": "hello"}
+    return db_post
 
 
 @router.get("/posts/{post_id}", response_model=PostResponse)
@@ -40,7 +40,7 @@ def get_post(
 ):
     db_post = db.query(Post).filter(Post.id == post_id).first()
     if not db_post:
-        raise HTTPException(status_code=404, detail="post not found")
+        raise HTTPException(status_code=404, detail="Post not found")
 
     user_reaction = None
     if user:
@@ -69,7 +69,7 @@ def update_post(
 ):
     db_post = db.query(Post).filter(Post.id == post_id, Post.user_id == user.id).first()
     if not db_post:
-        raise HTTPException(status_code=404, detail="post not found")
+        raise HTTPException(status_code=404, detail="Post not found")
 
     for key, value in post.model_dump(exclude_unset=True).items():
         if key == "tags":
@@ -90,11 +90,11 @@ def delete_post(
 ):
     db_post = db.query(Post).filter(Post.id == post_id, Post.user_id == user.id).first()
     if not db_post:
-        raise HTTPException(status_code=404, detail="post not found")
+        raise HTTPException(status_code=404, detail="Post not found")
 
     db.delete(db_post)
     db.commit()
-    return {"detail": "alskdmfmksf"}
+    return {"detail": "Post removed"}
 
 
 @router.post("/posts/{post_id}/reactions")
