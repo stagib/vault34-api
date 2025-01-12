@@ -104,6 +104,10 @@ def react_to_post(
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    db_post = db.query(Post).filter(Post.id == post_id).first()
+    if not db_post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
     db_reaction = (
         db.query(PostReaction)
         .filter(
@@ -115,9 +119,17 @@ def react_to_post(
     if db_reaction:
         db_reaction.type = reaction.type
         db.commit()
-        return {"detail": "Reaction updated"}
+        return {
+            "type": db_reaction.type,
+            "likes": db_post.likes,
+            "dislikes": db_post.dislikes,
+        }
 
     post_reaction = PostReaction(user_id=user.id, post_id=post_id, type=reaction.type)
     db.add(post_reaction)
     db.commit()
-    return {"detail": "Reaction added"}
+    return {
+        "type": db_reaction.type,
+        "likes": db_post.likes,
+        "dislikes": db_post.dislikes,
+    }

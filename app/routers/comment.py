@@ -118,11 +118,19 @@ def react_to_comment(
     if db_reaction:
         db_reaction.type = reaction.type
         db.commit()
-        return {"detail": "Reaction updated"}
+        return {
+            "type": db_reaction.type,
+            "likes": db_comment.likes,
+            "dislikes": db_comment.dislikes,
+        }
 
     comment_reaction = CommentReaction(
         user_id=user.id, comment_id=comment_id, type=reaction.type
     )
     db.add(comment_reaction)
     db.commit()
-    return {"detail": "Reaction added"}
+    return {
+        "type": db_reaction.type,
+        "likes": db_comment.likes,
+        "dislikes": db_comment.dislikes,
+    }
