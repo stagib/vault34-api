@@ -1,7 +1,7 @@
 import os
 from fastapi import FastAPI
 
-from app.routers import post, auth, post_file, user, vault, comment, report
+from app.routers import post, auth, post_file, user, vault, comment, report, tag
 from app.database import engine
 from app.models import Base
 from app.config import settings
@@ -13,6 +13,7 @@ app.include_router(comment.router)
 app.include_router(vault.router)
 app.include_router(user.router)
 app.include_router(report.router)
+app.include_router(tag.router)
 app.include_router(auth.router)
 
 Base.metadata.create_all(bind=engine)
