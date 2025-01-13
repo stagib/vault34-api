@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Table, func
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship
 
 from app.database import Base
 
@@ -32,6 +32,7 @@ class User(Base):
     comments = relationship("Comment", back_populates="user")
     post_reactions = relationship("PostReaction", back_populates="user")
     comment_reactions = relationship("CommentReaction", back_populates="user")
+    reports = relationship("Report", back_populates="user")
 
 
 class Post(Base):
@@ -131,3 +132,14 @@ class CommentReaction(Base):
     type = Column(String, nullable=False)
     user = relationship("User", back_populates="comment_reactions")
     Comment = relationship("Comment", back_populates="reactions")
+
+
+class Report(Base):
+    __tablename__ = "reports"
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    date_created = Column(DateTime, default=func.now())
+    target_type = Column(String, nullable=False)
+    target_id = Column(Integer, nullable=False)
+    detail = Column(String)
+    user = relationship("User", back_populates="reports")
