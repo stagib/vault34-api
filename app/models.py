@@ -141,5 +141,5 @@ class Report(Base):
     date_created = Column(DateTime, default=func.now())
     target_type = Column(String, nullable=False)
     target_id = Column(Integer, nullable=False)
-    detail = Column(String)
+    detail = Column(String, nullable=False)
     user = relationship("User", back_populates="reports")

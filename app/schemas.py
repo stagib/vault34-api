@@ -60,3 +60,18 @@ class CommentResponse(BaseModel):
 
 class ReactionBase(BaseModel):
     type: str
+
+
+class ReportCreate(BaseModel):
+    detail: str
+    target_id: int
+    target_type: str
+
+
+class ReportResponse(BaseModel):
+    id: int
+    date_created: datetime
+    target_id: int
+    target_type: str
+    detail: str
+    user: UserBase
