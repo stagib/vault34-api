@@ -1,5 +1,6 @@
 import os
 from fastapi import FastAPI
+from fastapi_pagination import add_pagination
 
 from app.routers import post, auth, post_file, user, vault, comment, report, tag
 from app.database import engine
@@ -15,6 +16,8 @@ app.include_router(user.router)
 app.include_router(report.router)
 app.include_router(tag.router)
 app.include_router(auth.router)
+
+add_pagination(app)
 
 Base.metadata.create_all(bind=engine)
 
