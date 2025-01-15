@@ -45,7 +45,7 @@ class Post(Base):
     tags = relationship("Tag", secondary=post_tag, back_populates="posts")
     vaults = relationship("Vault", secondary=post_vault, back_populates="posts")
     files = relationship("PostFile", back_populates="post")
-    comments = relationship("Comment", back_populates="post")
+    comments = relationship("Comment", back_populates="post", lazy="dynamic")
     reactions = relationship("PostReaction", back_populates="post", lazy="dynamic")
 
     @property

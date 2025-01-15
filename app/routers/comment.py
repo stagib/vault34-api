@@ -1,4 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi_pagination import Page
+from fastapi_pagination.ext.sqlalchemy import paginate
 from typing import Optional
 from sqlalchemy.orm import Session
 
@@ -10,7 +12,7 @@ from app.schemas import CommentBase, CommentResponse, ReactionBase
 router = APIRouter(tags=["Post Comment"])
 
 
-@router.get("/posts/{post_id}/comments", response_model=list[CommentResponse])
+@router.get("/posts/{post_id}/comments", response_model=Page[CommentResponse])
 def get_comments(
     post_id: int,
     user: Optional[dict] = Depends(get_optional_user),
@@ -20,8 +22,10 @@ def get_comments(
     if not db_post:
         raise HTTPException(status_code=404, detail="Post not found")
 
+    paginated_comments = paginate(db_post.comments)
+
     if user:
-        comment_ids = [comment.id for comment in db_post.comments]
+        comment_ids = [comment.id for comment in paginated_comments.items]
         reactions = (
             db.query(CommentReaction)
             .filter(
@@ -32,21 +36,10 @@ def get_comments(
         )
 
         reaction_map = {reaction.comment_id: reaction.type for reaction in reactions}
-        response = []
-        for comment in db_post.comments:
-            response.append(
-                {
-                    "id": comment.id,
-                    "date_created": comment.date_created,
-                    "likes": comment.likes,
-                    "dislikes": comment.dislikes,
-                    "user_reaction": reaction_map.get(comment.id),
-                    "content": comment.content,
-                    "user": comment.user,
-                }
-            )
-        return response
-    return db_post.comments
+        for comment in paginated_comments.items:
+            comment.user_reaction = reaction_map.get(comment.id)
+
+    return paginated_comments
 
 
 @router.post("/posts/{post_id}/comments")
@@ -130,7 +123,7 @@ def react_to_comment(
     db.add(comment_reaction)
     db.commit()
     return {
-        "type": db_reaction.type,
+        "type": comment_reaction.type,
         "likes": db_comment.likes,
         "dislikes": db_comment.dislikes,
     }
