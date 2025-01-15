@@ -129,7 +129,7 @@ def react_to_post(
     db.add(post_reaction)
     db.commit()
     return {
-        "type": db_reaction.type,
+        "type": post_reaction.type,
         "likes": db_post.likes,
         "dislikes": db_post.dislikes,
     }
