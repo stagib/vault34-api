@@ -1,13 +1,21 @@
 import os
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import FileResponse
+from fastapi_pagination import Page
+from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
 from uuid import uuid4
 
 from app.config import settings
 from app.database import get_db
 from app.models import User
-from app.schemas import UserBase, VaultResponse, PostBase, CommentResponse
+from app.schemas import (
+    UserBase,
+    VaultResponse,
+    PostBase,
+    CommentResponse,
+    PostReactionResponse,
+)
 from app.dependencies import get_current_user
 
 router = APIRouter(tags=["User"])
@@ -21,28 +29,30 @@ def get_user(username: str, db: Session = Depends(get_db)):
     return user
 
 
-@router.get("/users/{username}/posts", response_model=list[PostBase])
+@router.get("/users/{username}/posts", response_model=Page[PostBase])
 def get_user_posts(username: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return user.posts
+    return paginate(user.posts)
 
 
-@router.get("/users/{username}/posts/reactions")
+@router.get(
+    "/users/{username}/posts/reactions", response_model=Page[PostReactionResponse]
+)
 def get_user_post_reactions(username: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return user.post_reactions
+    return paginate(user.post_reactions)
 
 
-@router.get("/users/{username}/comments", response_model=list[CommentResponse])
+@router.get("/users/{username}/comments", response_model=Page[CommentResponse])
 def get_user_comments(username: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return user.comments
+    return paginate(user.comments)
 
 
 @router.get("/users/{username}/vaults", response_model=list[VaultResponse])

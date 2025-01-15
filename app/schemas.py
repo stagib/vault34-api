@@ -62,6 +62,14 @@ class ReactionBase(BaseModel):
     type: str
 
 
+class PostReactionResponse(BaseModel):
+    id: int
+    date_created: datetime
+    type: str
+    post: PostBase
+    user: UserBase
+
+
 class ReportCreate(BaseModel):
     detail: str
     target_id: int
