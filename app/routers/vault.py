@@ -92,6 +92,10 @@ def add_post_to_vault(
     if not db_post:
         raise HTTPException(status_code=404, detail="Post not found")
 
+    vault_post = any(post.id == post.id for post in db_vault.posts)
+    if vault_post:
+        raise HTTPException(status_code=404, detail="Post is already in vault")
+
     db_vault.posts.append(db_post)
     db.commit()
     db.refresh(db_vault)
