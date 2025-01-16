@@ -41,7 +41,7 @@ class VaultResponse(BaseModel):
     id: int
     title: str
     date_created: datetime
-    posts: list[PostBase]
+    user: UserBase
 
 
 class CommentBase(BaseModel):

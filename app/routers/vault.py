@@ -31,6 +31,17 @@ def create_vault(
     return {"detail": "Vault created successfully"}
 
 
+@router.get("/vaults/{vault_id}", response_model=VaultResponse)
+def get_vault(
+    vault_id: int,
+    db: Session = Depends(get_db),
+):
+    db_vault = db.query(Vault).filter(Vault.id == vault_id).first()
+    if not db_vault:
+        raise HTTPException(status_code=404, detail="Vault not found")
+    return db_vault
+
+
 @router.put("/vaults/{vault_id}", response_model=VaultResponse)
 def update_vault(
     vault: VaultBase,
