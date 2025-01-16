@@ -1,4 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi_pagination import Page
+from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
 from typing import Optional
 
@@ -12,9 +14,9 @@ from app.utils import add_tag
 router = APIRouter(tags=["Post"])
 
 
-@router.get("/posts", response_model=list[PostResponse])
+@router.get("/posts", response_model=Page[PostResponse])
 def get_posts(db: Session = Depends(get_db)):
-    return db.query(Post).all()
+    return paginate(db.query(Post))
 
 
 @router.post("/posts", response_model=PostResponse)
