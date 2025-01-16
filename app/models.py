@@ -28,7 +28,7 @@ class User(Base):
     password = Column(String, nullable=False)
     profile_picture = Column(String, nullable=False)
     posts = relationship("Post", back_populates="user", lazy="dynamic")
-    vaults = relationship("Vault", back_populates="user")
+    vaults = relationship("Vault", back_populates="user", lazy="dynamic")
     comments = relationship("Comment", back_populates="user", lazy="dynamic")
     post_reactions = relationship("PostReaction", back_populates="user", lazy="dynamic")
     comment_reactions = relationship("CommentReaction", back_populates="user")

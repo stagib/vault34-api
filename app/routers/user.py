@@ -55,23 +55,18 @@ def get_user_comments(username: str, db: Session = Depends(get_db)):
     return paginate(user.comments)
 
 
-@router.get("/users/{username}/vaults", response_model=list[VaultResponse])
+@router.get("/users/{username}/vaults", response_model=Page[VaultResponse])
 def get_user_vaults(username: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    vaults = []
-    for vault in user.vaults:
-        vaults.append(
-            {
-                "id": vault.id,
-                "title": vault.title,
-                "date_created": vault.date_created,
-                "posts": vault.posts[-3:],
-            }
-        )
-    return vaults
+    paginated_vaults = paginate(user.vaults)
+
+    for vault in paginated_vaults.items:
+        vault.posts = vault.posts[-3:]
+
+    return paginated_vaults
 
 
 @router.get("/users/{username}/profile-picture")
