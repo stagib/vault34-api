@@ -2,32 +2,27 @@ import os
 from PIL import Image
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import FileResponse
-from pydantic import BaseModel
+from fastapi_pagination import Page
+from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
 from uuid import uuid4
 
-from app.models import Post, PostFile
+from app.config import settings
 from app.database import get_db
 from app.dependencies import get_current_user
-from app.config import settings
+from app.models import Post, PostFile
+from app.schemas import FileBase
 
 
 router = APIRouter(tags=["Post File"])
 
 
-class FileBase(BaseModel):
-    id: int
-    filename: str
-    size: int
-    content_type: str
-
-
-@router.get("/posts/{post_id}/files", response_model=list[FileBase])
+@router.get("/posts/{post_id}/files", response_model=Page[FileBase])
 def get_post_files(post_id: int, db: Session = Depends(get_db)):
     db_post = db.query(Post).filter(Post.id == post_id).first()
     if not db_post:
         raise HTTPException(status_code=404, detail="post not found")
-    return db_post.files
+    return paginate(db_post.files)
 
 
 @router.post("/posts/{post_id}/files")

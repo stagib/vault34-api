@@ -83,3 +83,10 @@ class ReportResponse(BaseModel):
     target_type: str
     detail: str
     user: UserBase
+
+
+class FileBase(BaseModel):
+    id: int
+    filename: str
+    size: int
+    content_type: str
