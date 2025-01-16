@@ -21,7 +21,7 @@ router = APIRouter(tags=["Post File"])
 def get_post_files(post_id: int, db: Session = Depends(get_db)):
     db_post = db.query(Post).filter(Post.id == post_id).first()
     if not db_post:
-        raise HTTPException(status_code=404, detail="post not found")
+        raise HTTPException(status_code=404, detail="Post not found")
     return paginate(db_post.files)
 
 
@@ -34,14 +34,17 @@ async def upload_files(
 ):
     post = db.query(Post).filter(Post.id == post_id, Post.user_id == user.id).first()
     if not post:
-        raise HTTPException(status_code=404, detail="post not found")
+        raise HTTPException(status_code=404, detail="Post not found")
 
     for file in files:
         if (
             file.content_type
             not in settings.ALLOWED_IMAGE_TYPES + settings.ALLOWED_VIDEO_TYPES
         ):
-            raise HTTPException(status_code=400, detail="unsupported file type")
+            raise HTTPException(status_code=400, detail="Unsupported file type")
+
+        if file.size > settings.MAX_FILE_SIZE:
+            raise HTTPException(status_code=400, detail="File too large")
 
         _, ext = os.path.splitext(file.filename)
         unique_filename = f"{uuid4().hex}{ext}"
@@ -74,18 +77,22 @@ async def upload_files(
         db.commit()
         db.refresh(post_file)
 
-    return {"detail": "hello"}
+    return {"detail": "File added"}
 
 
 @router.get("/posts/{post_id}/files/{file_id}")
 def get_file(post_id: int, file_id: int, db: Session = Depends(get_db)):
-    file = db.query(PostFile).filter(Post.id == post_id, PostFile.id == file_id).first()
+    file = (
+        db.query(PostFile)
+        .filter(PostFile.post_id == post_id, PostFile.id == file_id)
+        .first()
+    )
     if not file:
-        raise HTTPException(status_code=404, detail="file not found")
+        raise HTTPException(status_code=404, detail="File not found")
 
     file_path = os.path.join(settings.UPLOAD_FOLDER, file.file_path)
     if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="file not found")
+        raise HTTPException(status_code=404, detail="File not found")
 
     return FileResponse(file_path, media_type=file.content_type)
 
@@ -97,10 +104,22 @@ def delete_file(
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    file = db.query(PostFile).filter(Post.id == post_id, PostFile.id == file_id).first()
+    post = db.query(Post).filter(Post.id == post_id, Post.user_id == user.id).first()
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    file = (
+        db.query(PostFile)
+        .filter(PostFile.post_id == post_id, PostFile.id == file_id)
+        .first()
+    )
     if not file:
-        raise HTTPException(status_code=404, detail="file not found")
+        raise HTTPException(status_code=404, detail="File not found")
+
+    file_path = os.path.join(settings.UPLOAD_FOLDER, file.file_path)
+    if os.path.exists(file_path):
+        os.remove(file_path)
 
     db.delete(file)
     db.commit()
-    return {"salkdfkma": "sdlkmffskml"}
+    return {"detail": "Removed file"}
