@@ -1,4 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi_pagination import Page
+from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -67,12 +69,12 @@ def delete_vault(
     return {"detail": "Successfully deleted vault"}
 
 
-@router.get("/vaults/{vault_id}/posts", response_model=VaultResponse)
+@router.get("/vaults/{vault_id}/posts", response_model=Page[PostBase])
 def get_vault_posts(vault_id: int, db: Session = Depends(get_db)):
     db_vault = db.query(Vault).filter(Vault.id == vault_id).first()
     if not db_vault:
         raise HTTPException(status_code=404, detail="Vault not found")
-    return db_vault
+    return paginate(db_vault.posts)
 
 
 @router.post("/vaults/{vault_id}/posts")

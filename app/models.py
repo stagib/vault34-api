@@ -89,7 +89,9 @@ class Vault(Base):
     date_created = Column(DateTime, default=func.now())
     title = Column(String, nullable=False)
     user = relationship("User", back_populates="vaults")
-    posts = relationship("Post", secondary=post_vault, back_populates="vaults")
+    posts = relationship(
+        "Post", secondary=post_vault, back_populates="vaults", lazy="dynamic"
+    )
 
 
 class Tag(Base):
