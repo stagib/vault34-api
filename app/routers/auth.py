@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Response, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -17,6 +17,10 @@ class UserCreate(BaseModel):
 
 @router.post("/register")
 def register_user(response: Response, user: UserCreate, db: Session = Depends(get_db)):
+    db_user = db.query(User).filter(User.username == user.username).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Username is already taken")
+
     hashed_password = hash_password(user.password)
     db_user = User(username=user.username, password=hashed_password, profile_picture="")
 
@@ -26,7 +30,7 @@ def register_user(response: Response, user: UserCreate, db: Session = Depends(ge
 
     token = create_token(db_user.id)
     response.set_cookie(key="auth_token", value=token)
-    return {"token": f"{token}"}
+    return {"detail": "User registered"}
 
 
 @router.post("/login")
@@ -34,10 +38,10 @@ def login(response: Response, user: UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(User).filter_by(username=user.username).first()
 
     if not db_user:
-        return {"error": "user not found"}
+        return {"error": "User not found"}
 
     if verify_password(db_user.password, user.password):
         token = create_token(db_user.id)
         response.set_cookie(key="auth_token", value=token)
 
-    return {"sdfsfsn": "sdfdsf"}
+    return {"detail": "Logged in"}
