@@ -8,6 +8,11 @@ class UserBase(BaseModel):
     username: str
 
 
+class UserCreate(BaseModel):
+    username: str
+    password: str
+
+
 class TagBase(BaseModel):
     name: str
     type: Literal["Artist", "General", "Character", "Series"]

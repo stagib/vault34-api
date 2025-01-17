@@ -1,27 +1,43 @@
 import os
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Response
 from fastapi.responses import FileResponse
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
 from uuid import uuid4
 
+import app.schemas as schemas
 from app.config import settings
 from app.database import get_db
 from app.models import User
-from app.schemas import (
-    UserBase,
-    VaultResponse,
-    PostBase,
-    CommentResponse,
-    PostReactionResponse,
-)
 from app.dependencies import get_current_user
+from app.utils import hash_password, create_token
+
 
 router = APIRouter(tags=["User"])
 
 
-@router.get("/users/{username}", response_model=UserBase)
+@router.post("/users")
+def register_user(
+    response: Response, user: schemas.UserCreate, db: Session = Depends(get_db)
+):
+    db_user = db.query(User).filter(User.username == user.username).first()
+    if db_user:
+        raise HTTPException(status_code=400, detail="Username is already taken")
+
+    hashed_password = hash_password(user.password)
+    db_user = User(username=user.username, password=hashed_password, profile_picture="")
+
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+
+    token = create_token(db_user.id)
+    response.set_cookie(key="auth_token", value=token)
+    return {"detail": "User registered"}
+
+
+@router.get("/users/{username}", response_model=schemas.UserBase)
 def get_user(username: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
     if not user:
@@ -29,7 +45,7 @@ def get_user(username: str, db: Session = Depends(get_db)):
     return user
 
 
-@router.get("/users/{username}/posts", response_model=Page[PostBase])
+@router.get("/users/{username}/posts", response_model=Page[schemas.PostBase])
 def get_user_posts(username: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
     if not user:
@@ -38,7 +54,8 @@ def get_user_posts(username: str, db: Session = Depends(get_db)):
 
 
 @router.get(
-    "/users/{username}/posts/reactions", response_model=Page[PostReactionResponse]
+    "/users/{username}/posts/reactions",
+    response_model=Page[schemas.PostReactionResponse],
 )
 def get_user_post_reactions(username: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
@@ -47,7 +64,7 @@ def get_user_post_reactions(username: str, db: Session = Depends(get_db)):
     return paginate(user.post_reactions)
 
 
-@router.get("/users/{username}/comments", response_model=Page[CommentResponse])
+@router.get("/users/{username}/comments", response_model=Page[schemas.CommentResponse])
 def get_user_comments(username: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
     if not user:
@@ -55,7 +72,7 @@ def get_user_comments(username: str, db: Session = Depends(get_db)):
     return paginate(user.comments)
 
 
-@router.get("/users/{username}/vaults", response_model=Page[VaultResponse])
+@router.get("/users/{username}/vaults", response_model=Page[schemas.VaultResponse])
 def get_user_vaults(username: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
     if not user:

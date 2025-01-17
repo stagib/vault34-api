@@ -15,24 +15,6 @@ class UserCreate(BaseModel):
     password: str
 
 
-@router.post("/register")
-def register_user(response: Response, user: UserCreate, db: Session = Depends(get_db)):
-    db_user = db.query(User).filter(User.username == user.username).first()
-    if db_user:
-        raise HTTPException(status_code=400, detail="Username is already taken")
-
-    hashed_password = hash_password(user.password)
-    db_user = User(username=user.username, password=hashed_password, profile_picture="")
-
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-
-    token = create_token(db_user.id)
-    response.set_cookie(key="auth_token", value=token)
-    return {"detail": "User registered"}
-
-
 @router.post("/login")
 def login(response: Response, user: UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(User).filter_by(username=user.username).first()
