@@ -7,6 +7,7 @@ from app.database import engine
 from app.models import Base
 from app.config import settings
 
+
 app = FastAPI()
 app.include_router(post.router)
 app.include_router(post_file.router)
