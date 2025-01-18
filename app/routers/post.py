@@ -45,22 +45,12 @@ def get_post(
     if not db_post:
         raise HTTPException(status_code=404, detail="Post not found")
 
-    user_reaction = ReactionType.NONE
     if user:
         reaction = db_post.reactions.filter(PostReaction.user_id == user.id).first()
         if reaction:
-            user_reaction = reaction.type
+            db_post.user_reaction = reaction.type
 
-    return {
-        "id": db_post.id,
-        "title": db_post.title,
-        "date_created": db_post.date_created,
-        "likes": db_post.likes,
-        "dislikes": db_post.dislikes,
-        "user_reaction": user_reaction,
-        "user": db_post.user,
-        "tags": db_post.tags,
-    }
+    return db_post
 
 
 @router.put("/posts/{post_id}", response_model=PostResponse)
