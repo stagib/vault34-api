@@ -6,7 +6,6 @@ from typing import Optional
 
 from app.database import get_db
 from app.dependencies import get_current_user, get_optional_user
-from app.enums import ReactionType
 from app.models import Post, PostReaction
 from app.schemas import PostCreate, PostResponse, ReactionBase
 from app.utils import add_tag
