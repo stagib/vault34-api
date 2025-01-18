@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Literal, Optional
+
+from app.enums import TagType, ReactionType
 
 
 class UserBase(BaseModel):
@@ -15,7 +16,7 @@ class UserCreate(BaseModel):
 
 class TagBase(BaseModel):
     name: str
-    type: Literal["Artist", "General", "Character", "Series"]
+    type: TagType
 
 
 class PostBase(BaseModel):
@@ -33,7 +34,7 @@ class PostResponse(BaseModel):
     date_created: datetime
     likes: int
     dislikes: int
-    user_reaction: Optional[str] = None
+    user_reaction: ReactionType = ReactionType.NONE
     user: UserBase
     tags: list[TagBase]
 
@@ -58,19 +59,19 @@ class CommentResponse(BaseModel):
     date_created: datetime
     likes: int
     dislikes: int
-    user_reaction: Optional[str] = None
+    user_reaction: ReactionType = ReactionType.NONE
     content: str
     user: UserBase
 
 
 class ReactionBase(BaseModel):
-    type: str
+    type: ReactionType
 
 
 class PostReactionResponse(BaseModel):
     id: int
     date_created: datetime
-    type: str
+    type: ReactionType
     post: PostBase
     user: UserBase
 

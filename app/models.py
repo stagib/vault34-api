@@ -1,7 +1,8 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Table, func
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Table, Enum, func
 from sqlalchemy.orm import relationship
 
 from app.database import Base
+from app.enums import TagType, ReactionType
 
 
 post_tag = Table(
@@ -77,7 +78,7 @@ class PostReaction(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     post_id = Column(Integer, ForeignKey("posts.id"), nullable=False)
     date_created = Column(DateTime, default=func.now())
-    type = Column(String, nullable=False)
+    type = Column(Enum(ReactionType), nullable=False, default=ReactionType.NONE)
     user = relationship("User", back_populates="post_reactions")
     post = relationship("Post", back_populates="reactions")
 
@@ -99,7 +100,7 @@ class Tag(Base):
     id = Column(Integer, primary_key=True, index=True)
     date_created = Column(DateTime, default=func.now())
     name = Column(String, nullable=False)
-    type = Column(String, nullable=False)
+    type = Column(Enum(TagType), nullable=False)
     posts = relationship("Post", secondary=post_tag, back_populates="tags")
 
 
@@ -131,7 +132,7 @@ class CommentReaction(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     comment_id = Column(Integer, ForeignKey("comments.id"), nullable=False)
     date_created = Column(DateTime, default=func.now())
-    type = Column(String, nullable=False)
+    type = Column(Enum(ReactionType), nullable=False, default=ReactionType.NONE)
     user = relationship("User", back_populates="comment_reactions")
     Comment = relationship("Comment", back_populates="reactions")
 

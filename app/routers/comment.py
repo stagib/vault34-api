@@ -5,6 +5,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.enums import ReactionType
 from app.models import Comment, Post, CommentReaction
 from app.dependencies import get_current_user, get_optional_user
 from app.schemas import CommentBase, CommentResponse, ReactionBase
@@ -37,7 +38,9 @@ def get_comments(
 
         reaction_map = {reaction.comment_id: reaction.type for reaction in reactions}
         for comment in paginated_comments.items:
-            comment.user_reaction = reaction_map.get(comment.id)
+            comment.user_reaction = ReactionType.NONE
+            if reaction_map.get(comment.id):
+                comment.user_reaction = reaction_map.get(comment.id)
 
     return paginated_comments
 
