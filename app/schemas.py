@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
 
-from app.enums import TagType, ReactionType
+from app.enums import TagType, ReactionType, ReportType
 
 
 class UserBase(BaseModel):
@@ -81,14 +81,14 @@ class PostReactionResponse(BaseModel):
 class ReportCreate(BaseModel):
     detail: str
     target_id: int
-    target_type: str
+    target_type: ReportType
 
 
 class ReportResponse(BaseModel):
     id: int
     date_created: datetime
     target_id: int
-    target_type: str
+    target_type: ReportType
     detail: str
     user: UserBase
 

@@ -12,3 +12,9 @@ class ReactionType(str, Enum):
     LIKE = "like"
     DISLIKE = "dislike"
     NONE = "none"
+
+
+class ReportType(str, Enum):
+    USER = "user"
+    POST = "post"
+    COMMENT = "comment"

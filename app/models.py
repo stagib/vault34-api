@@ -4,7 +4,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Table, Enu
 from sqlalchemy.orm import relationship
 
 from app.database import Base
-from app.enums import TagType, ReactionType
+from app.enums import TagType, ReactionType, ReportType
 
 
 post_tag = Table(
@@ -152,7 +152,7 @@ class Report(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     date_created = Column(DateTime, default=func.now())
-    target_type = Column(String, nullable=False)
+    target_type = Column(Enum(ReportType), nullable=False)
     target_id = Column(Integer, nullable=False)
     detail = Column(String, nullable=False)
     user = relationship("User", back_populates="reports")

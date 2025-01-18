@@ -3,9 +3,10 @@ from sqlalchemy.orm import Session
 from typing import Optional
 
 from app.database import get_db
-from app.utils import get_optional_user
+from app.enums import ReportType
 from app.models import Report, Comment, User, Post
 from app.schemas import ReportCreate, ReportResponse
+from app.utils import get_optional_user
 
 router = APIRouter(tags=["Report"])
 
@@ -16,15 +17,17 @@ def create_report(
     user: Optional[dict] = Depends(get_optional_user),
     db: Session = Depends(get_db),
 ):
-    if report.target_type == "user":
+    if report.target_type == ReportType.USER:
         db_user = db.query(User).filter(User.id == report.target_id).first()
         if not db_user:
             raise HTTPException(status_code=404, detail="User not found")
-    elif report.target_type == "post":
+
+    elif report.target_type == ReportType.POST:
         db_post = db.query(Post).filter(Post.id == report.target_id).first()
         if not db_post:
             raise HTTPException(status_code=404, detail="Post not found")
-    elif report.target_type == "comment":
+
+    elif report.target_type == ReportType.COMMENT:
         db_comment = db.query(Comment).filter(Comment.id == report.target_id).first()
         if not db_comment:
             raise HTTPException(status_code=404, detail="Comment not found")
