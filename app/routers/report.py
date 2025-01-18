@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Optional
 
 from app.database import get_db
-from app.dependencies import get_optional_user
+from app.utils import get_optional_user
 from app.models import Report, Comment, User, Post
 from app.schemas import ReportCreate, ReportResponse
 
