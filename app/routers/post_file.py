@@ -9,9 +9,9 @@ from uuid import uuid4
 
 from app.config import settings
 from app.database import get_db
-from app.dependencies import get_current_user
 from app.models import Post, PostFile
 from app.schemas import FileBase
+from app.utils import get_current_user
 
 
 router = APIRouter(tags=["Post File"])

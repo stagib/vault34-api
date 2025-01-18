@@ -10,8 +10,7 @@ import app.schemas as schemas
 from app.config import settings
 from app.database import get_db
 from app.models import User
-from app.dependencies import get_current_user
-from app.utils import hash_password, create_token
+from app.utils import hash_password, create_token, get_current_user
 
 
 router = APIRouter(tags=["User"])

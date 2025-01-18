@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Vault, Post
-from app.dependencies import get_current_user
 from app.schemas import VaultBase, VaultResponse, PostBase
+from app.utils import get_current_user
 
 router = APIRouter(tags=["Vault"])
 

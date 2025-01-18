@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.enums import ReactionType
 from app.models import Comment, Post, CommentReaction
-from app.dependencies import get_current_user, get_optional_user
 from app.schemas import CommentBase, CommentResponse, ReactionBase
+from app.utils import get_current_user, get_optional_user
 
 router = APIRouter(tags=["Post Comment"])
 
