@@ -58,6 +58,7 @@ class CommentBase(BaseModel):
 class CommentResponse(BaseModel):
     id: int
     date_created: datetime
+    time_since: str
     likes: int
     dislikes: int
     user_reaction: ReactionType = ReactionType.NONE

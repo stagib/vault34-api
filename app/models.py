@@ -131,6 +131,10 @@ class Comment(Base):
     def dislikes(self):
         return self.reactions.filter(CommentReaction.type == "dislike").count()
 
+    @property
+    def time_since(self) -> str:
+        return naturaltime(datetime.now() - self.date_created)
+
 
 class CommentReaction(Base):
     __tablename__ = "comment_reactions"
