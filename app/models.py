@@ -1,3 +1,5 @@
+from datetime import datetime
+from humanize import naturaltime
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Table, Enum, func
 from sqlalchemy.orm import relationship
 
@@ -50,12 +52,16 @@ class Post(Base):
     reactions = relationship("PostReaction", back_populates="post", lazy="dynamic")
 
     @property
-    def likes(self):
+    def likes(self) -> int:
         return self.reactions.filter(PostReaction.type == "like").count()
 
     @property
-    def dislikes(self):
+    def dislikes(self) -> int:
         return self.reactions.filter(PostReaction.type == "dislike").count()
+
+    @property
+    def time_since(self) -> str:
+        return naturaltime(datetime.now() - self.date_created)
 
 
 class PostFile(Base):

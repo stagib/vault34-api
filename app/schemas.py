@@ -32,6 +32,7 @@ class PostResponse(BaseModel):
     id: int
     title: str
     date_created: datetime
+    time_since: str
     likes: int
     dislikes: int
     user_reaction: ReactionType = ReactionType.NONE
