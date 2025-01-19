@@ -3,11 +3,16 @@ from sqlalchemy.orm import Session
 
 from app.models import User
 from app.database import get_db
-from app.utils import verify_password, create_token
-from app.schemas import UserCreate
+from app.utils import verify_password, create_token, get_current_user
+from app.schemas import UserCreate, UserBase
 
 
 router = APIRouter(tags=["Auth"])
+
+
+@router.get("/verify-token", response_model=UserBase)
+def verify_auth_token(user: dict = Depends(get_current_user)):
+    return user
 
 
 @router.post("/login")
