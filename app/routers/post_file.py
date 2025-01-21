@@ -80,11 +80,11 @@ async def upload_files(
     return {"detail": "File added"}
 
 
-@router.get("/posts/{post_id}/files/{file_id}")
-def get_file(post_id: int, file_id: int, db: Session = Depends(get_db)):
+@router.get("/posts/{post_id}/files/{filename}")
+def get_file(post_id: int, filename: str, db: Session = Depends(get_db)):
     file = (
         db.query(PostFile)
-        .filter(PostFile.post_id == post_id, PostFile.id == file_id)
+        .filter(PostFile.post_id == post_id, PostFile.filename == filename)
         .first()
     )
     if not file:

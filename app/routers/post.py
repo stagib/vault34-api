@@ -20,7 +20,9 @@ def get_posts(db: Session = Depends(get_db)):
     for post in paginated_posts.items:
         post_file = db.query(PostFile).filter(PostFile.post_id == post.id).first()
         if post_file:
-            post.thumbnail = f"{settings.API_URL}/posts/{post.id}/files/{post_file.id}"
+            post.thumbnail = (
+                f"{settings.API_URL}/posts/{post.id}/files/{post_file.filename}"
+            )
     return paginated_posts
 
 
