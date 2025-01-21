@@ -4,18 +4,24 @@ from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
 from typing import Optional
 
+from app.config import settings
 from app.database import get_db
-from app.models import Post, PostReaction
-from app.schemas import PostCreate, PostResponse, ReactionBase
+from app.models import Post, PostReaction, PostFile
+from app.schemas import PostCreate, PostResponse, ReactionBase, PostBase
 from app.utils import add_tag, get_current_user, get_optional_user
 
 
 router = APIRouter(tags=["Post"])
 
 
-@router.get("/posts", response_model=Page[PostResponse])
+@router.get("/posts", response_model=Page[PostBase])
 def get_posts(db: Session = Depends(get_db)):
-    return paginate(db.query(Post))
+    paginated_posts = paginate(db.query(Post))
+    for post in paginated_posts.items:
+        post_file = db.query(PostFile).filter(PostFile.post_id == post.id).first()
+        if post_file:
+            post.thumbnail = f"{settings.API_URL}/posts/{post.id}/files/{post_file.id}"
+    return paginated_posts
 
 
 @router.post("/posts", response_model=PostResponse)

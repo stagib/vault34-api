@@ -21,6 +21,7 @@ class TagBase(BaseModel):
 
 class PostBase(BaseModel):
     id: int
+    thumbnail: str = None
 
 
 class PostCreate(BaseModel):

@@ -3,6 +3,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    API_URL: str
     DATABASE_URL: str
     SECRET_KEY: str
     ALGORITHM: str = "HS256"
