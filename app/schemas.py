@@ -99,3 +99,4 @@ class FileBase(BaseModel):
     filename: str
     size: int
     content_type: str
+    url: str = None

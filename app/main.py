@@ -1,5 +1,6 @@
 import os
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi_pagination import add_pagination
 
 from app.routers import post, auth, post_file, user, vault, comment, report, tag
@@ -17,6 +18,14 @@ app.include_router(user.router)
 app.include_router(report.router)
 app.include_router(tag.router)
 app.include_router(auth.router)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 add_pagination(app)
 

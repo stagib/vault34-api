@@ -22,7 +22,11 @@ def get_post_files(post_id: int, db: Session = Depends(get_db)):
     db_post = db.query(Post).filter(Post.id == post_id).first()
     if not db_post:
         raise HTTPException(status_code=404, detail="Post not found")
-    return paginate(db_post.files)
+
+    paginated_files = paginate(db_post.files)
+    for file in paginated_files.items:
+        file.url = f"{settings.API_URL}/posts/{db_post.id}/files/{file.filename}"
+    return paginated_files
 
 
 @router.post("/posts/{post_id}/files")

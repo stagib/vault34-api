@@ -3,6 +3,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    ORIGINS: list
     API_URL: str
     DATABASE_URL: str
     SECRET_KEY: str
