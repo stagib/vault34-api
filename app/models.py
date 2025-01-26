@@ -109,6 +109,10 @@ class Tag(Base):
     type = Column(Enum(TagType), nullable=False)
     posts = relationship("Post", secondary=post_tag, back_populates="tags")
 
+    @property
+    def count(self) -> int:
+        return len(self.posts)
+
 
 class Comment(Base):
     __tablename__ = "comments"

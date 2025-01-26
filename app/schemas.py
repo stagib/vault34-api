@@ -17,6 +17,7 @@ class UserCreate(BaseModel):
 class TagBase(BaseModel):
     name: str
     type: TagType
+    count: int
 
 
 class PostBase(BaseModel):
