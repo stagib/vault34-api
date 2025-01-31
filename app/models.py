@@ -47,9 +47,18 @@ class Post(Base):
     user = relationship("User", back_populates="posts")
     tags = relationship("Tag", secondary=post_tag, back_populates="posts")
     vaults = relationship("Vault", secondary=post_vault, back_populates="posts")
-    files = relationship("PostFile", back_populates="post", lazy="dynamic")
-    comments = relationship("Comment", back_populates="post", lazy="dynamic")
-    reactions = relationship("PostReaction", back_populates="post", lazy="dynamic")
+    files = relationship(
+        "PostFile", back_populates="post", lazy="dynamic", cascade="all, delete-orphan"
+    )
+    comments = relationship(
+        "Comment", back_populates="post", lazy="dynamic", cascade="all, delete-orphan"
+    )
+    reactions = relationship(
+        "PostReaction",
+        back_populates="post",
+        lazy="dynamic",
+        cascade="all, delete-orphan",
+    )
 
     @property
     def likes(self) -> int:
