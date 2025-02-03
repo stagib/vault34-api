@@ -4,7 +4,7 @@ from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Table, Enu
 from sqlalchemy.orm import relationship
 
 from app.database import Base
-from app.enums import TagType, ReactionType, ReportType
+from app.enums import TagType, ReactionType, ReportType, Privacy
 
 
 post_tag = Table(
@@ -124,6 +124,7 @@ class Vault(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     date_created = Column(DateTime, default=func.now())
     title = Column(String, nullable=False)
+    privacy = Column(Enum(Privacy), nullable=False, default=Privacy.PRIVATE)
     user = relationship("User", back_populates="vaults")
     posts = relationship(
         "Post", secondary=post_vault, back_populates="vaults", lazy="dynamic"

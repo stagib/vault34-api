@@ -25,7 +25,7 @@ def create_vault(
     if db_vault:
         raise HTTPException(status_code=409, detail="Vault already exists")
 
-    db_vault = Vault(title=vault.title, user_id=user.id)
+    db_vault = Vault(title=vault.title, user_id=user.id, privacy=vault.privacy)
     db.add(db_vault)
     db.commit()
     return {"detail": "Vault created successfully"}

@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
 
-from app.enums import TagType, ReactionType, ReportType
+from app.enums import TagType, ReactionType, ReportType, Privacy
 
 
 class UserBase(BaseModel):
@@ -54,12 +54,14 @@ class PostResponse(BaseModel):
 
 class VaultBase(BaseModel):
     title: str
+    privacy: Privacy
 
 
 class VaultResponse(BaseModel):
     id: int
     title: str
     date_created: datetime
+    privacy: Privacy
     user: UserBase
     post_count: int
 

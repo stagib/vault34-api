@@ -18,3 +18,8 @@ class ReportType(str, Enum):
     USER = "user"
     POST = "post"
     COMMENT = "comment"
+
+
+class Privacy(str, Enum):
+    PUBLIC = "public"
+    PRIVATE = "private"

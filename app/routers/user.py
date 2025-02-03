@@ -82,12 +82,12 @@ def get_user_vaults(username: str, db: Session = Depends(get_db)):
     for vault in paginated_vaults.items:
         vault.posts = vault.posts[-3:]
 
-    for post in vault.posts:
-        post_file = db.query(PostFile).filter(PostFile.post_id == post.id).first()
-        if post_file:
-            post.thumbnail = (
-                f"{settings.API_URL}/posts/{post.id}/files/{post_file.filename}"
-            )
+        for post in vault.posts:
+            post_file = db.query(PostFile).filter(PostFile.post_id == post.id).first()
+            if post_file:
+                post.thumbnail = (
+                    f"{settings.API_URL}/posts/{post.id}/files/{post_file.filename}"
+                )
 
     return paginated_vaults
 
