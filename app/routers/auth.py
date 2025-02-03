@@ -19,7 +19,7 @@ def verify_auth_token(user: dict = Depends(get_current_user)):
 def login(response: Response, user: UserCreate, db: Session = Depends(get_db)):
     db_user = db.query(User).filter_by(username=user.username).first()
     if not db_user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="Username or password is incorrect")
 
     if not verify_password(db_user.password, user.password):
         raise HTTPException(status_code=401, detail="Username or password is incorrect")
