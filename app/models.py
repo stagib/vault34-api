@@ -37,6 +37,26 @@ class User(Base):
     comment_reactions = relationship("CommentReaction", back_populates="user")
     reports = relationship("Report", back_populates="user")
 
+    @property
+    def time_since(self) -> str:
+        return naturaltime(datetime.now() - self.date_created)
+
+    @property
+    def vault_count(self) -> int:
+        return self.vaults.count()
+
+    @property
+    def post_count(self) -> int:
+        return self.posts.count()
+
+    @property
+    def comment_count(self) -> int:
+        return self.comments.count()
+
+    @property
+    def liked_posts(self) -> int:
+        return self.post_reactions.filter(PostReaction.type == "like").count()
+
 
 class Post(Base):
     __tablename__ = "posts"
@@ -108,6 +128,10 @@ class Vault(Base):
     posts = relationship(
         "Post", secondary=post_vault, back_populates="vaults", lazy="dynamic"
     )
+
+    @property
+    def post_count(self):
+        return self.posts.count()
 
 
 class Tag(Base):

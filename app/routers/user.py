@@ -9,7 +9,7 @@ from uuid import uuid4
 import app.schemas as schemas
 from app.config import settings
 from app.database import get_db
-from app.models import User
+from app.models import User, PostFile
 from app.utils import hash_password, create_token, get_current_user
 
 
@@ -36,7 +36,7 @@ def register_user(
     return {"detail": "User registered"}
 
 
-@router.get("/users/{username}", response_model=schemas.UserBase)
+@router.get("/users/{username}", response_model=schemas.UserResponse)
 def get_user(username: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
     if not user:
@@ -71,7 +71,7 @@ def get_user_comments(username: str, db: Session = Depends(get_db)):
     return paginate(user.comments)
 
 
-@router.get("/users/{username}/vaults", response_model=Page[schemas.VaultResponse])
+@router.get("/users/{username}/vaults", response_model=Page[schemas.UserVaultResponse])
 def get_user_vaults(username: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
     if not user:
@@ -81,6 +81,13 @@ def get_user_vaults(username: str, db: Session = Depends(get_db)):
 
     for vault in paginated_vaults.items:
         vault.posts = vault.posts[-3:]
+
+    for post in vault.posts:
+        post_file = db.query(PostFile).filter(PostFile.post_id == post.id).first()
+        if post_file:
+            post.thumbnail = (
+                f"{settings.API_URL}/posts/{post.id}/files/{post_file.filename}"
+            )
 
     return paginated_vaults
 

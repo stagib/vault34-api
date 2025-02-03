@@ -88,9 +88,9 @@ def get_vault_posts(vault_id: int, db: Session = Depends(get_db)):
     return paginate(db_vault.posts)
 
 
-@router.post("/vaults/{vault_id}/posts")
+@router.post("/vaults/{vault_id}/posts/{post_id}")
 def add_post_to_vault(
-    post: PostBase,
+    post_id: int,
     vault_id: int,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -101,11 +101,11 @@ def add_post_to_vault(
     if not db_vault:
         raise HTTPException(status_code=404, detail="Vault not found")
 
-    db_post = db.query(Post).filter(Post.id == post.id).first()
+    db_post = db.query(Post).filter(Post.id == post_id).first()
     if not db_post:
         raise HTTPException(status_code=404, detail="Post not found")
 
-    vault_post = any(post.id == post.id for post in db_vault.posts)
+    vault_post = any(post_id == post.id for post in db_vault.posts)
     if vault_post:
         raise HTTPException(status_code=404, detail="Post is already in vault")
 

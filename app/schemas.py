@@ -9,6 +9,16 @@ class UserBase(BaseModel):
     username: str
 
 
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    time_since: str
+    vault_count: int
+    post_count: int
+    comment_count: int
+    liked_posts: int
+
+
 class UserCreate(BaseModel):
     username: str
     password: str
@@ -51,6 +61,16 @@ class VaultResponse(BaseModel):
     title: str
     date_created: datetime
     user: UserBase
+    post_count: int
+
+
+class UserVaultResponse(BaseModel):
+    id: int
+    title: str
+    date_created: datetime
+    user: UserBase
+    post_count: int
+    posts: list[PostBase]
 
 
 class CommentBase(BaseModel):
