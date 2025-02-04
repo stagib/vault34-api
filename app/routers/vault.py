@@ -3,8 +3,9 @@ from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.database import get_db
-from app.models import Vault, Post
+from app.models import Vault, Post, PostFile
 from app.schemas import VaultBase, VaultResponse, PostBase
 from app.utils import get_current_user
 
@@ -85,7 +86,15 @@ def get_vault_posts(vault_id: int, db: Session = Depends(get_db)):
     db_vault = db.query(Vault).filter(Vault.id == vault_id).first()
     if not db_vault:
         raise HTTPException(status_code=404, detail="Vault not found")
-    return paginate(db_vault.posts)
+
+    paginated_posts = paginate(db_vault.posts)
+    for post in paginated_posts.items:
+        post_file = db.query(PostFile).filter(PostFile.post_id == post.id).first()
+        if post_file:
+            post.thumbnail = (
+                f"{settings.API_URL}/posts/{post.id}/files/{post_file.filename}"
+            )
+    return paginated_posts
 
 
 @router.post("/vaults/{vault_id}/posts/{post_id}")

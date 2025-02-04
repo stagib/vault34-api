@@ -134,6 +134,10 @@ class Vault(Base):
     def post_count(self):
         return self.posts.count()
 
+    @property
+    def time_since(self) -> str:
+        return naturaltime(datetime.now() - self.date_created)
+
 
 class Tag(Base):
     __tablename__ = "tags"
