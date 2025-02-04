@@ -91,6 +91,7 @@ class CommentResponse(BaseModel):
     user_reaction: ReactionType = ReactionType.NONE
     content: str
     user: UserBase
+    post: PostBase
 
 
 class ReactionBase(BaseModel):
@@ -102,7 +103,6 @@ class PostReactionResponse(BaseModel):
     date_created: datetime
     type: ReactionType
     post: PostBase
-    user: UserBase
 
 
 class ReportCreate(BaseModel):

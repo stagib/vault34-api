@@ -1,15 +1,16 @@
 import os
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Response
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Response, Query
 from fastapi.responses import FileResponse
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy.orm import Session
 from uuid import uuid4
 
+from app.enums import ReactionType
 import app.schemas as schemas
 from app.config import settings
 from app.database import get_db
-from app.models import User, PostFile
+from app.models import User, PostFile, PostReaction
 from app.utils import hash_password, create_token, get_current_user
 
 
@@ -62,13 +63,28 @@ def get_user_posts(username: str, db: Session = Depends(get_db)):
 
 @router.get(
     "/users/{username}/posts/reactions",
-    response_model=Page[schemas.PostReactionResponse],
+    response_model=Page[schemas.PostBase],
 )
-def get_user_post_reactions(username: str, db: Session = Depends(get_db)):
+def get_user_post_reactions(
+    username: str, type: ReactionType = Query(None), db: Session = Depends(get_db)
+):
     user = db.query(User).filter(User.username == username).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return paginate(user.post_reactions)
+
+    post_reactions = user.post_reactions
+    if type:
+        post_reactions = post_reactions.filter(PostReaction.type == type)
+
+    paginated_posts = paginate(post_reactions)
+    for post in paginated_posts.items:
+        post_file = db.query(PostFile).filter(PostFile.post_id == post.id).first()
+        if post_file:
+            post.thumbnail = (
+                f"{settings.API_URL}/posts/{post.id}/files/{post_file.filename}"
+            )
+
+    return paginated_posts
 
 
 @router.get("/users/{username}/comments", response_model=Page[schemas.CommentResponse])
