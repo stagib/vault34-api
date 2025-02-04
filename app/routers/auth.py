@@ -17,7 +17,7 @@ def verify_auth_token(user: dict = Depends(get_current_user)):
 
 @router.post("/login")
 def login(response: Response, user: UserCreate, db: Session = Depends(get_db)):
-    db_user = db.query(User).filter_by(username=user.username).first()
+    db_user = db.query(User).filter(User.username == user.username).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="Username or password is incorrect")
 
