@@ -49,7 +49,15 @@ def get_user_posts(username: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return paginate(user.posts)
+
+    paginated_posts = paginate(user.posts)
+    for post in paginated_posts.items:
+        post_file = db.query(PostFile).filter(PostFile.post_id == post.id).first()
+        if post_file:
+            post.thumbnail = (
+                f"{settings.API_URL}/posts/{post.id}/files/{post_file.filename}"
+            )
+    return paginated_posts
 
 
 @router.get(
