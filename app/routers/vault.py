@@ -12,7 +12,7 @@ from app.utils import get_current_user
 router = APIRouter(tags=["Vault"])
 
 
-@router.post("/vaults")
+@router.post("/vaults", response_model=VaultResponse)
 def create_vault(
     vault: VaultBase,
     user: dict = Depends(get_current_user),
@@ -29,7 +29,7 @@ def create_vault(
     db_vault = Vault(title=vault.title, user_id=user.id, privacy=vault.privacy)
     db.add(db_vault)
     db.commit()
-    return {"detail": "Vault created successfully"}
+    return db_vault
 
 
 @router.get("/vaults/{vault_id}", response_model=VaultResponse)
