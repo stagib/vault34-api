@@ -121,12 +121,12 @@ def add_post_to_vault(
     db_vault.posts.append(db_post)
     db.commit()
     db.refresh(db_vault)
-    return db_vault.title
+    return {"detail": "Added post to vault"}
 
 
-@router.delete("/vaults/{vault_id}/posts")
+@router.delete("/vaults/{vault_id}/posts/{post_id}")
 def delete_post_from_vault(
-    post: PostBase,
+    post_id: int,
     vault_id: int,
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -137,7 +137,7 @@ def delete_post_from_vault(
     if not db_vault:
         raise HTTPException(status_code=404, detail="Vault not found")
 
-    db_post = db.query(Post).filter(Post.id == post.id).first()
+    db_post = db.query(Post).filter(Post.id == post_id).first()
     if not db_post:
         raise HTTPException(status_code=404, detail="Post not found")
 

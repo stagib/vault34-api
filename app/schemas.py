@@ -60,7 +60,6 @@ class VaultBase(BaseModel):
 class VaultResponse(BaseModel):
     id: int
     title: str
-    date_created: datetime
     privacy: Privacy
     time_since: str
     user: UserBase
@@ -70,11 +69,11 @@ class VaultResponse(BaseModel):
 class UserVaultResponse(BaseModel):
     id: int
     title: str
-    date_created: datetime
     privacy: Privacy
     time_since: str
     user: UserBase
     post_count: int
+    has_post: bool = False
     posts: list[PostBase]
 
 

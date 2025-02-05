@@ -96,7 +96,9 @@ def get_user_comments(username: str, db: Session = Depends(get_db)):
 
 
 @router.get("/users/{username}/vaults", response_model=Page[schemas.UserVaultResponse])
-def get_user_vaults(username: str, db: Session = Depends(get_db)):
+def get_user_vaults(
+    username: str, post_id: int = Query(None), db: Session = Depends(get_db)
+):
     user = db.query(User).filter(User.username == username).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -104,6 +106,9 @@ def get_user_vaults(username: str, db: Session = Depends(get_db)):
     paginated_vaults = paginate(user.vaults)
 
     for vault in paginated_vaults.items:
+        has_post = any(post_id == post.id for post in vault.posts)
+
+        vault.has_post = has_post
         vault.posts = vault.posts[-3:]
 
         for post in vault.posts:
