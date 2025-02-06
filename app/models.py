@@ -1,6 +1,16 @@
 from datetime import datetime
 from humanize import naturaltime
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Table, Enum, func
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Boolean,
+    DateTime,
+    ForeignKey,
+    Table,
+    Enum,
+    func,
+)
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -100,6 +110,7 @@ class PostFile(Base):
     date_created = Column(DateTime, default=func.now(), nullable=True)
     filename = Column(String, nullable=False)
     file_path = Column(String, nullable=False)
+    thumbnail_path = Column(String, nullable=False)
     content_type = Column(String, nullable=False)
     size = Column(Integer)
     width = Column(Integer)

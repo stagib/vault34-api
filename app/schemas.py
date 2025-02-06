@@ -122,6 +122,5 @@ class ReportResponse(BaseModel):
 class FileBase(BaseModel):
     id: int
     filename: str
-    size: int
     content_type: str
-    url: str = None
+    src: str = None

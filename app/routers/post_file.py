@@ -1,6 +1,7 @@
 import os
 from PIL import Image
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from moviepy import VideoFileClip
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
 from fastapi.responses import FileResponse
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
@@ -17,6 +18,60 @@ from app.utils import get_current_user
 router = APIRouter(tags=["Post File"])
 
 
+def get_image_size(file, file_path):
+    if file.content_type in settings.ALLOWED_IMAGE_TYPES:
+        with Image.open(file_path) as img:
+            return img.size
+    return (None, None)
+
+
+def unique_filename(file):
+    _, ext = os.path.splitext(file.filename)
+    unique_filename = f"{uuid4().hex}{ext}"
+    return unique_filename
+
+
+def create_thumbnail_filename(filename):
+    name, _ = os.path.splitext(filename)
+    return f"thumb_{name}.jpg"
+
+
+def create_file_path(filename, username, post_id):
+    upload_path = os.path.join(settings.UPLOAD_FOLDER, username, "posts", str(post_id))
+    file_path = os.path.join(upload_path, filename)
+    os.makedirs(upload_path, exist_ok=True)
+    return file_path
+
+
+def create_image_thumbnail(file_path, thumbnail_path):
+    with Image.open(file_path) as img:
+        img.thumbnail(size=(1024, 1024))
+        img.save(thumbnail_path)
+
+
+def create_video_thumbnail(file_path, thumbnail_path):
+    clip = VideoFileClip(file_path)
+    frame = clip.get_frame(1)
+    image = Image.fromarray(frame)
+    image.thumbnail(size=(1024, 1024))
+    image.save(thumbnail_path)
+
+
+def create_thumbnail(file, file_path, thumbnail_path):
+    if file.content_type in settings.ALLOWED_IMAGE_TYPES:
+        create_image_thumbnail(file_path, thumbnail_path)
+    elif file.content_type in settings.ALLOWED_VIDEO_TYPES:
+        create_video_thumbnail(file_path, thumbnail_path)
+    else:
+        raise HTTPException(status_code=400, detail="Unsupported file type")
+
+
+async def download_file(file, file_path):
+    with open(file_path, "wb") as f:
+        while content := await file.read(1024 * 1024):
+            f.write(content)
+
+
 @router.get("/posts/{post_id}/files", response_model=Page[FileBase])
 def get_post_files(post_id: int, db: Session = Depends(get_db)):
     db_post = db.query(Post).filter(Post.id == post_id).first()
@@ -25,7 +80,7 @@ def get_post_files(post_id: int, db: Session = Depends(get_db)):
 
     paginated_files = paginate(db_post.files)
     for file in paginated_files.items:
-        file.url = f"{settings.API_URL}/posts/{db_post.id}/files/{file.filename}"
+        file.src = f"{settings.API_URL}/posts/{db_post.id}/files/{file.filename}"
     return paginated_files
 
 
@@ -50,28 +105,21 @@ async def upload_files(
         if file.size > settings.MAX_FILE_SIZE:
             raise HTTPException(status_code=400, detail="File too large")
 
-        _, ext = os.path.splitext(file.filename)
-        unique_filename = f"{uuid4().hex}{ext}"
-        upload_path = os.path.join(
-            settings.UPLOAD_FOLDER, user.username, "posts", str(post_id)
-        )
-        file_path = os.path.join(upload_path, unique_filename)
+        filename = unique_filename(file)
+        thumbnail_filename = create_thumbnail_filename(filename)
+        file_path = create_file_path(filename, user.username, post_id)
+        thumbnail_path = create_file_path(thumbnail_filename, user.username, post_id)
 
-        os.makedirs(upload_path, exist_ok=True)
-        with open(file_path, "wb") as f:
-            while content := await file.read(1024 * 1024):
-                f.write(content)
-
-        file_width = file_height = None
-        if file.content_type in settings.ALLOWED_IMAGE_TYPES:
-            with Image.open(file_path) as img:
-                file_width, file_height = img.size
+        await download_file(file, file_path)
+        create_thumbnail(file, file_path, thumbnail_path)
+        file_width, file_height = get_image_size(file, file_path)
 
         post_file = PostFile(
             post_id=post.id,
-            filename=unique_filename,
+            filename=filename,
             content_type=file.content_type,
             file_path=os.path.relpath(file_path, settings.UPLOAD_FOLDER),
+            thumbnail_path=os.path.relpath(thumbnail_path, settings.UPLOAD_FOLDER),
             size=file.size,
             width=file_width,
             height=file_height,
@@ -81,11 +129,13 @@ async def upload_files(
         db.commit()
         db.refresh(post_file)
 
-    return {"detail": "File added"}
+    return {"detail": "Files added"}
 
 
 @router.get("/posts/{post_id}/files/{filename}")
-def get_file(post_id: int, filename: str, db: Session = Depends(get_db)):
+def get_file(
+    post_id: int, filename: str, type: str = Query(None), db: Session = Depends(get_db)
+):
     file = (
         db.query(PostFile)
         .filter(PostFile.post_id == post_id, PostFile.filename == filename)
@@ -94,7 +144,11 @@ def get_file(post_id: int, filename: str, db: Session = Depends(get_db)):
     if not file:
         raise HTTPException(status_code=404, detail="File not found")
 
-    file_path = os.path.join(settings.UPLOAD_FOLDER, file.file_path)
+    path = file.file_path
+    if type == "thumbnail":
+        path = file.thumbnail_path
+
+    file_path = os.path.join(settings.UPLOAD_FOLDER, path)
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")
 
