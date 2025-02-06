@@ -31,9 +31,12 @@ def unique_filename(file):
     return unique_filename
 
 
-def create_thumbnail_filename(filename):
-    name, _ = os.path.splitext(filename)
-    return f"thumb_{name}.jpg"
+def create_thumbnail_filename(file, filename):
+    name, ext = os.path.splitext(filename)
+    if file.content_type in settings.ALLOWED_IMAGE_TYPES:
+        return f"thumb_{name}{ext}"
+    if file.content_type in settings.ALLOWED_VIDEO_TYPES:
+        return f"thumb_{name}.jpg"
 
 
 def create_file_path(filename, username, post_id):
@@ -106,7 +109,7 @@ async def upload_files(
             raise HTTPException(status_code=400, detail="File too large")
 
         filename = unique_filename(file)
-        thumbnail_filename = create_thumbnail_filename(filename)
+        thumbnail_filename = create_thumbnail_filename(file, filename)
         file_path = create_file_path(filename, user.username, post_id)
         thumbnail_path = create_file_path(thumbnail_filename, user.username, post_id)
 
