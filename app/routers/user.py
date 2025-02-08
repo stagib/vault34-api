@@ -3,15 +3,16 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Respons
 from fastapi.responses import FileResponse
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
+from typing import Optional
 from sqlalchemy.orm import Session
 from uuid import uuid4
 
-from app.enums import ReactionType
 import app.schemas as schemas
+from app.enums import ReactionType, Privacy
 from app.config import settings
 from app.database import get_db
 from app.models import User, PostFile, PostReaction
-from app.utils import hash_password, create_token, get_current_user
+from app.utils import hash_password, create_token, get_current_user, get_optional_user
 
 
 router = APIRouter(tags=["User"])
@@ -97,15 +98,26 @@ def get_user_comments(username: str, db: Session = Depends(get_db)):
 
 @router.get("/users/{username}/vaults", response_model=Page[schemas.UserVaultResponse])
 def get_user_vaults(
-    username: str, post_id: int = Query(None), db: Session = Depends(get_db)
+    username: str,
+    post_id: int = Query(None),
+    user: Optional[dict] = Depends(get_optional_user),
+    db: Session = Depends(get_db),
 ):
-    user = db.query(User).filter(User.username == username).first()
-    if not user:
+    db_user = db.query(User).filter(User.username == username).first()
+    if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    paginated_vaults = paginate(user.vaults)
+    paginated_vaults = paginate(db_user.vaults)
+    if not user:
+        paginated_vaults.items = [
+            vault for vault in paginated_vaults.items if vault.privacy == Privacy.PUBLIC
+        ]
+    elif user.id != db_user.id:
+        paginated_vaults.items = [
+            vault for vault in paginated_vaults.items if vault.privacy == Privacy.PUBLIC
+        ]
 
-    for vault in paginated_vaults.items:
+    for vault in paginated_vaults.items[:]:
         has_post = any(post_id == post.id for post in vault.posts)
 
         vault.has_post = has_post
@@ -114,9 +126,7 @@ def get_user_vaults(
         for post in vault.posts:
             post_file = db.query(PostFile).filter(PostFile.post_id == post.id).first()
             if post_file:
-                post.thumbnail = (
-                    f"{settings.API_URL}/posts/{post.id}/files/{post_file.filename}"
-                )
+                post.thumbnail = f"{settings.API_URL}/posts/{post.id}/files/{post_file.filename}?type=thumbnail"
 
     return paginated_vaults
 
