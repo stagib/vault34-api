@@ -45,7 +45,7 @@ def get_comments(
     return paginated_comments
 
 
-@router.post("/posts/{post_id}/comments")
+@router.post("/posts/{post_id}/comments", response_model=CommentResponse)
 def create_comment(
     post_id: int,
     comment: CommentBase,
@@ -60,7 +60,7 @@ def create_comment(
     db.add(db_comment)
     db.commit()
     db.refresh(db_comment)
-    return {"detail": "Comment created"}
+    return db_comment
 
 
 @router.delete("/posts/{post_id}/comments/{comment_id}")
