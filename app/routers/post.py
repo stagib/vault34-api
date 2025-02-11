@@ -1,12 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from typing import Optional
 
 from app.config import settings
 from app.database import get_db
-from app.models import Post, PostReaction, PostFile
+from app.models import Post, PostReaction, PostFile, Tag
 from app.schemas import PostCreate, PostResponse, ReactionBase, PostBase
 from app.utils import add_tag, get_current_user, get_optional_user
 
@@ -15,8 +16,18 @@ router = APIRouter(tags=["Post"])
 
 
 @router.get("/posts", response_model=Page[PostBase])
-def get_posts(db: Session = Depends(get_db)):
-    paginated_posts = paginate(db.query(Post))
+def get_posts(query: str = Query(None, min_length=1), db: Session = Depends(get_db)):
+    posts = db.query(Post)
+
+    if query:
+        posts = posts.filter(
+            or_(
+                Post.title.ilike(f"%{query}%"),
+                Post.tags.any(Tag.name.ilike(f"%{query}%")),
+            )
+        )
+
+    paginated_posts = paginate(posts)
     for post in paginated_posts.items:
         post_file = db.query(PostFile).filter(PostFile.post_id == post.id).first()
         if post_file:
