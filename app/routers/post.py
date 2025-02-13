@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Form, File, UploadFile
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
 from sqlalchemy import or_
@@ -9,7 +9,13 @@ from app.config import settings
 from app.database import get_db
 from app.models import Post, PostReaction, PostFile, Tag
 from app.schemas import PostCreate, PostResponse, ReactionBase, PostBase
-from app.utils import add_tag, get_current_user, get_optional_user
+from app.utils import (
+    add_tag,
+    get_current_user,
+    get_optional_user,
+    validate_files,
+    add_files,
+)
 
 
 router = APIRouter(tags=["Post"])
@@ -36,17 +42,20 @@ def get_posts(query: str = Query(None, min_length=1), db: Session = Depends(get_
 
 
 @router.post("/posts", response_model=PostResponse)
-def create_post(
-    post: PostCreate,
+async def create_post(
+    title: Optional[str] = Form(None),
+    files: list[UploadFile] = File(...),
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    db_post = Post(title=post.title, user_id=user.id)
+    validate_files(files)
+
+    db_post = Post(title=title, user_id=user.id)
     db.add(db_post)
     db.commit()
     db.refresh(db_post)
 
-    add_tag(db, post.tags, db_post)
+    await add_files(db, files, db_post, user)
     return db_post
 
 
