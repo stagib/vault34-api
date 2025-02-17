@@ -56,9 +56,7 @@ def get_user_posts(username: str, db: Session = Depends(get_db)):
     for post in paginated_posts.items:
         post_file = db.query(PostFile).filter(PostFile.post_id == post.id).first()
         if post_file:
-            post.thumbnail = (
-                f"{settings.API_URL}/posts/{post.id}/files/{post_file.filename}"
-            )
+            post.thumbnail = f"{settings.API_URL}/posts/{post.id}/files/{post_file.filename}?type=thumbnail"
     return paginated_posts
 
 
@@ -81,9 +79,7 @@ def get_user_post_reactions(
     for post in paginated_posts.items:
         post_file = db.query(PostFile).filter(PostFile.post_id == post.id).first()
         if post_file:
-            post.thumbnail = (
-                f"{settings.API_URL}/posts/{post.id}/files/{post_file.filename}"
-            )
+            post.thumbnail = f"{settings.API_URL}/posts/{post.id}/files/{post_file.filename}?type=thumbnail"
 
     return paginated_posts
 
