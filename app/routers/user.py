@@ -4,6 +4,7 @@ from fastapi.responses import FileResponse
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
 from typing import Optional
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 from uuid import uuid4
 
@@ -11,7 +12,7 @@ import app.schemas as schemas
 from app.enums import ReactionType, Privacy
 from app.config import settings
 from app.database import get_db
-from app.models import User, PostFile, PostReaction, CommentReaction
+from app.models import User, PostFile, PostReaction, CommentReaction, Comment, Post
 from app.utils import hash_password, create_token, get_current_user, get_optional_user
 
 
@@ -52,7 +53,7 @@ def get_user_posts(username: str, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    paginated_posts = paginate(user.posts)
+    paginated_posts = paginate(user.posts.order_by(desc(Post.date_created)))
     for post in paginated_posts.items:
         post_file = db.query(PostFile).filter(PostFile.post_id == post.id).first()
         if post_file:
@@ -93,7 +94,8 @@ def get_user_comments(
     db_user = db.query(User).filter(User.username == username).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
-    paginated_comments = paginate(db_user.comments)
+
+    paginated_comments = paginate(db_user.comments.order_by(desc(Comment.date_created)))
     if user:
         comment_ids = [comment.id for comment in paginated_comments.items]
         reactions = (

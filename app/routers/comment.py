@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
 from typing import Optional
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -23,7 +24,11 @@ def get_comments(
     if not db_post:
         raise HTTPException(status_code=404, detail="Post not found")
 
-    paginated_comments = paginate(db_post.comments)
+    paginated_comments = paginate(
+        db_post.comments.order_by(
+            desc(Comment.reaction_count), desc(Comment.date_created)
+        )
+    )
 
     if user:
         comment_ids = [comment.id for comment in paginated_comments.items]

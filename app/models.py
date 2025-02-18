@@ -4,13 +4,14 @@ from sqlalchemy import (
     Column,
     Integer,
     String,
-    Boolean,
     DateTime,
     ForeignKey,
     Table,
     Enum,
+    select,
     func,
 )
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -89,6 +90,19 @@ class Post(Base):
         lazy="dynamic",
         cascade="all, delete-orphan",
     )
+
+    @hybrid_property
+    def reaction_count(self):
+        return self.reactions.count()
+
+    @reaction_count.expression
+    def reaction_count(cls):
+        return (
+            (select(func.count(PostReaction.id)))
+            .where(PostReaction.post_id == cls.id)
+            .correlate(cls)
+            .as_scalar()
+        )
 
     @property
     def likes(self) -> int:
@@ -178,6 +192,19 @@ class Comment(Base):
         lazy="dynamic",
         cascade="all, delete-orphan",
     )
+
+    @hybrid_property
+    def reaction_count(self):
+        return self.reactions.count()
+
+    @reaction_count.expression
+    def reaction_count(cls):
+        return (
+            (select(func.count(CommentReaction.id)))
+            .where(CommentReaction.comment_id == cls.id)
+            .correlate(cls)
+            .as_scalar()
+        )
 
     @property
     def likes(self):

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Form, File, UploadFile
 from fastapi_pagination import Page
 from fastapi_pagination.ext.sqlalchemy import paginate
-from sqlalchemy import or_
+from sqlalchemy import or_, desc
 from sqlalchemy.orm import Session
 from typing import Optional
 
@@ -23,7 +23,7 @@ router = APIRouter(tags=["Post"])
 
 @router.get("/posts", response_model=Page[PostBase])
 def get_posts(query: str = Query(None, min_length=1), db: Session = Depends(get_db)):
-    posts = db.query(Post)
+    posts = db.query(Post).order_by(desc(Post.reaction_count))
 
     if query:
         posts = posts.filter(
