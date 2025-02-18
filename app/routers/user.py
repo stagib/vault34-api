@@ -11,7 +11,7 @@ import app.schemas as schemas
 from app.enums import ReactionType, Privacy
 from app.config import settings
 from app.database import get_db
-from app.models import User, PostFile, PostReaction
+from app.models import User, PostFile, PostReaction, CommentReaction
 from app.utils import hash_password, create_token, get_current_user, get_optional_user
 
 
@@ -85,11 +85,32 @@ def get_user_post_reactions(
 
 
 @router.get("/users/{username}/comments", response_model=Page[schemas.CommentResponse])
-def get_user_comments(username: str, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.username == username).first()
-    if not user:
+def get_user_comments(
+    username: str,
+    user: Optional[dict] = Depends(get_optional_user),
+    db: Session = Depends(get_db),
+):
+    db_user = db.query(User).filter(User.username == username).first()
+    if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
-    return paginate(user.comments)
+    paginated_comments = paginate(db_user.comments)
+    if user:
+        comment_ids = [comment.id for comment in paginated_comments.items]
+        reactions = (
+            db.query(CommentReaction)
+            .filter(
+                CommentReaction.comment_id.in_(comment_ids),
+                CommentReaction.user_id == user.id,
+            )
+            .all()
+        )
+
+        reaction_map = {reaction.comment_id: reaction.type for reaction in reactions}
+        for comment in paginated_comments.items:
+            comment.user_reaction = ReactionType.NONE
+            if reaction_map.get(comment.id):
+                comment.user_reaction = reaction_map.get(comment.id)
+    return paginated_comments
 
 
 @router.get("/users/{username}/vaults", response_model=Page[schemas.UserVaultResponse])
