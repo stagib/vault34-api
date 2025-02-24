@@ -23,7 +23,7 @@ router = APIRouter(tags=["Post"])
 
 @router.get("/posts", response_model=Page[PostBase])
 def get_posts(query: str = Query(None, min_length=1), db: Session = Depends(get_db)):
-    posts = db.query(Post).order_by(desc(Post.reaction_count))
+    posts = db.query(Post).order_by(desc(Post.reaction_count), desc(Post.date_created))
 
     if query:
         posts = posts.filter(
