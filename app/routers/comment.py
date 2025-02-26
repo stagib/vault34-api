@@ -57,9 +57,6 @@ def create_comment(
     user: dict = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    if len(comment.content) < 1:
-        raise HTTPException(status_code=400, detail="Invalid content")
-
     db_post = db.query(Post).filter(Post.id == post_id).first()
     if not db_post:
         raise HTTPException(status_code=404, detail="Post not found")

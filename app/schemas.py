@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import datetime
 
 from app.enums import TagType, ReactionType, ReportType, Privacy
@@ -20,12 +20,12 @@ class UserResponse(BaseModel):
 
 
 class UserCreate(BaseModel):
-    username: str
-    password: str
+    username: str = Field(..., min_length=3, max_length=30)
+    password: str = Field(..., min_length=3, max_length=100)
 
 
 class TagBase(BaseModel):
-    name: str
+    name: str = Field(..., min_length=1, max_length=30)
     type: TagType
     count: int
 
@@ -36,7 +36,7 @@ class PostBase(BaseModel):
 
 
 class PostCreate(BaseModel):
-    title: str
+    title: str = Field(..., min_length=0, max_length=100)
     tags: list[TagBase]
 
 
@@ -53,7 +53,7 @@ class PostResponse(BaseModel):
 
 
 class VaultBase(BaseModel):
-    title: str
+    title: str = Field(..., min_length=1, max_length=30)
     privacy: Privacy
 
 
@@ -78,7 +78,7 @@ class UserVaultResponse(BaseModel):
 
 
 class CommentBase(BaseModel):
-    content: str
+    content: str = Field(..., min_length=1, max_length=500)
 
 
 class CommentResponse(BaseModel):
@@ -105,7 +105,7 @@ class PostReactionResponse(BaseModel):
 
 
 class ReportCreate(BaseModel):
-    detail: str
+    detail: str = Field(..., min_length=1, max_length=500)
     target_id: int
     target_type: ReportType
 
