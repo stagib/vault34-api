@@ -27,3 +27,9 @@ def login(response: Response, user: UserCreate, db: Session = Depends(get_db)):
     token = create_token(db_user.id)
     response.set_cookie(key="auth_token", value=token)
     return {"detail": "Logged in"}
+
+
+@router.post("/logout")
+def logout(response: Response):
+    response.delete_cookie("auth_token")
+    return {"detail": "Logged out"}
